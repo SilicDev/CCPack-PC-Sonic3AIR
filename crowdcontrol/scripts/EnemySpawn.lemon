@@ -1,0 +1,266 @@
+#if 1
+// temporary hook-up mechanism
+function void UpdateGamePause() 
+{
+	base.UpdateGamePause()
+	
+	// should probably put in something to ensure we're in standard play?
+	if (Input.buttonPressed(0, BUTTON_L))
+	{
+		if (!CrowdControl.SpawnRandomEnemy())
+		{
+			// should pass this back to crowd control so the user gets refunded
+			System.writeDisplayLine("Didn't trigger")
+		}
+	}	
+}
+#endif
+
+function bool CrowdControl.SpawnRandomEnemy()
+{
+	u32 updateAddress = 0
+	u32 rand = 0	
+	
+	// Would have preferred to do (at least) an array 
+	// of enemies per zone to pick from instead of this,
+	// but can't initialize with addressof.
+	
+	if (global.zone.apparent == 0x00)
+	{
+		// AIZ
+		updateAddress = addressof(CatakillerJr.BaseUpdate)
+	}
+	else if (global.zone.apparent == 0x01)
+	{
+		// HCZ
+		rand = System.randRange(0,5)
+		if (rand == 0)
+		{
+			updateAddress = addressof(Blastoid.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Bugernaut.BaseUpdate)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(Jawz.PostInit)
+		}
+		else if (rand == 3)
+		{
+			updateAddress = addressof(Piranha.BaseUpdate)
+		}
+		else if (rand == 4)
+		{
+			updateAddress = addressof(Pointdexter.BaseUpdate)
+		}
+		else if (rand == 5)
+		{
+			updateAddress = addressof(TurboSpiker.Update)
+		}
+	}
+	else if (global.zone.apparent == 0x02)
+	{
+		// MGZ
+		rand = System.randRange(0,3)
+		if (rand == 0)
+		{
+			updateAddress = addressof(BubblesEnemy.Update)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Spiker.Update)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(Mantis.Update)
+		}
+		else if (rand == 3)
+		{
+			updateAddress = addressof(Driller.Update)
+		}
+	}
+	else if (global.zone.apparent == 0x03)
+	{
+		// CNZ
+		rand = System.randRange(0,2)
+		if (rand == 0)
+		{
+			updateAddress = addressof(Batbot.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Clamer.BaseUpdate)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(Sparkle.BaseUpdate)
+		}
+	}
+	else if (global.zone.apparent == 0x05)
+	{
+		// ICZ
+		rand = System.randRange(0,2)
+		if (rand == 0)
+		{
+			// may want some mechanism to adjust the spawn position of this one upwards more.
+			updateAddress = addressof(Freezer.Init2)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Penguin.Update)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(StarPointer.Update)
+		}
+	}
+	else if (global.zone.apparent == 0x06)
+	{
+		// LBZ
+		rand = System.randRange(0,4)
+		if (rand == 0)
+		{
+			// may want some mechanism to adjust the spawn position of this one upwards more.
+			updateAddress = addressof(Corkey.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(FlyBot.BaseUpdate)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(Orbinaut.BaseUpdate)
+		}
+		else if (rand == 3)
+		{
+			updateAddress = addressof(Ribot.BaseUpdate)
+		}
+		else if (rand == 4)
+		{
+			updateAddress = addressof(SnailBlaster.BaseUpdate)
+		}
+	}
+	else if (global.zone.apparent == 0x07)
+	{
+		// MHZ
+		rand = System.randRange(0,4)
+		if (rand == 0)
+		{
+			updateAddress = addressof(Butterfly.Update)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Cluckoid.BaseUpdate)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(Dragonfly.BaseUpdate)
+		}
+		else if (rand == 3)
+		{
+			updateAddress = addressof(Madmole.Hole.BaseUpdate)
+		}
+		else if (rand == 4)
+		{
+			updateAddress = addressof(Mushmeanie.BaseUpdate)
+		}
+	}
+	else if (global.zone.apparent == 0x04)
+	{
+		// FBZ
+		rand = System.randRange(0,1)
+		if (rand == 0)
+		{
+			updateAddress = addressof(Blaster.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Technosqueek.Update)
+		}
+	}
+	else if (global.zone.apparent == 0x08)
+	{
+		// SOZ
+		rand = System.randRange(0,2)
+		if (rand == 0)
+		{
+			// might not be killable if it doesn't spawn on ground (and so you can't roll into it)
+			updateAddress = addressof(Rockn.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			// looks very silly outside of a sandpit
+			updateAddress = addressof(Sandworm.BaseUpdate)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(Skorp.Update)
+		}
+	}
+	else if (global.zone_act == 0x1600) 
+	{
+		// LRZ boss
+	}
+	else if (global.zone_act == 0x1601)
+	{
+		// HPZ
+	}
+	else if (global.zone.apparent == 0x09)
+	{
+		// LRZ
+		rand = System.randRange(0,2)
+		if (rand == 0)
+		{
+			updateAddress = addressof(Fireworm.Hole.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Iwamodoki.BaseUpdate)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(Toxomister.PostInit)
+		}
+	}
+	else if (global.zone.apparent == 0x0a)
+	{
+		// SSZ
+		// need to look into this more - seems to just spawn the animation of it appearing, but not the
+		// actual enemy. Presumably some extra initialization needed somewhere or it needs to be a diffent function entirely
+		updateAddress = addressof(EggRobo.BaseUpdate)
+	}
+	else if (global.zone.apparent == 0x0b)
+	{
+		// DEZ
+		rand = System.randRange(0,1)
+		if (rand == 0)
+		{
+			updateAddress = addressof(Chainspike.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Spikebonker.Update)
+		}
+	}
+	else if (global.zone.apparent == 0x0c)
+	{
+		// DDZ
+	}
+
+	
+	if (updateAddress != 0 && allocDynamicObjectStd())
+	{	
+		objA1.update_address = updateAddress
+		objA1.base_state = 0
+		
+		// for now, spawn a litte to the right of camera centre
+		objA1.position.x = camera.position.x
+		objA1.position.y = camera.position.y
+		objA1.position.x.u16 += (getScreenWidth() / 2) + 64
+		objA1.position.y.u16 += (getScreenHeight() / 2) - 10
+
+		return true
+	}
+	return false
+}
