@@ -30,6 +30,30 @@ function u8 Game.triggerCrowdControlEffect(string effectCode)
         AddRings()
 		return CCStatusCode.SUCCESS
     }
+    if (effectCode == "CharSonic")
+    {
+		u32 ABackUp = A0
+		A0 = 0xffffb000
+        Character.Initialization.Sonic()
+        A0 = ABackUp
+		return CCStatusCode.SUCCESS
+    }
+    if (effectCode == "CharTails")
+    {
+		u32 ABackUp = A0
+		A0 = 0xffffb000
+        Character.Initialization.Tails()
+        A0 = ABackUp
+		return CCStatusCode.SUCCESS
+    }
+    if (effectCode == "CharKnuckles")
+    {
+		u32 ABackUp = A0
+		A0 = 0xffffb000
+        Character.Initialization.Knuckles()
+        A0 = ABackUp
+		return CCStatusCode.SUCCESS
+    }
 
 	// For unknown effects
 	return CCStatusCode.UNAVAILABLE
