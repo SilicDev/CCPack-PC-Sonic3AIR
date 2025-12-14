@@ -1,10 +1,10 @@
-﻿using CrowdControl.Common;
+﻿using ConnectorLib.SimpleTCP;
 using JetBrains.Annotations;
 
 namespace CrowdControl.Games.Packs.Sonic3AIR;
 
 [UsedImplicitly]
-class Sonic3AIR : SimpleTCPPack
+class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
 {
     public override string Host => "127.0.0.1";
     public override ushort Port => 58430;
