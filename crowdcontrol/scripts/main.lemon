@@ -9,6 +9,15 @@ constant u8 CCStatusCode.PAUSED			= 0x06		// The timed effect has been paused an
 constant u8 CCStatusCode.RESUME			= 0x07		// The timed effect has been resumed and is counting down again
 constant u8 CCStatusCode.FINISHED		= 0x08		// The timed effect has finished
 
+constant u8 object_size = 0x4A
+
+function void PreFrameUpdate()
+{
+    if (global.characters == CHARS_TAILS_ALONE)
+    {
+        tails.control_counter = 600 // don't let the AI mess with us
+    }
+}
 
 function u8 Game.triggerCrowdControlEffect(string effectCode)
 {
@@ -19,10 +28,6 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
 {
 	// Debug output
 	//debugLog(effectCode)
-    if (!Game.isNormalGame() || global.game.paused) // Main Game and not loading
-    {
-        return CCStatusCode.FAILURE
-    }
 
 	if (effectCode == "AddRing")
 	{
@@ -43,7 +48,7 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
-        Character.Initialization.Sonic()
+        SwapToSonic()
         A0 = ABackUp
 		return CCStatusCode.SUCCESS
     }
@@ -51,7 +56,7 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
-        Character.Initialization.Tails()
+        SwapToTails()
         A0 = ABackUp
 		return CCStatusCode.SUCCESS
     }
@@ -59,13 +64,72 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
-        Character.Initialization.Knuckles()
+        SwapToKnuckles()
         A0 = ABackUp
 		return CCStatusCode.SUCCESS
     }
 
 	// For unknown effects
 	return CCStatusCode.UNAVAILABLE
+}
+
+// return is unused for now, just adding in case we have additional fail conditions
+function bool SwapToSonic()
+{
+    char.update_address = 0x010a94
+    u16 sprio = u16[0xFFB00A]
+    char.base_state = 0x00
+    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
+    global.characters = CHARS_SONIC_ALONE
+    SnapTails(3)
+    //Character.Initialization.Sonic()
+    return true
+}
+
+function bool SwapToTails()
+{
+    char.update_address = 0x01365c
+    u16 sprio = u16[0xFFB00A]
+    char.base_state = 0x00
+    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
+    global.characters = CHARS_TAILS_ALONE
+    SnapTails(1)
+    //Character.Initialization.Tails()
+    return true
+}
+
+function bool SwapToKnuckles()
+{
+    char.update_address = 0x016444
+    u16 sprio = u16[0xFFB00A]
+    char.base_state = 0x00
+    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
+    global.characters = CHARS_KNUCKLES_ALONE
+    SnapTails(3)
+    //Character.Initialization.Knuckles()
+    return true
+}
+
+function void SnapTails(u8 character)
+{
+    for (u8 i = 95; i < 108; i++)
+    {
+        if (u16[0xFFB000 + (object_size * i) + 0x02] == 0x609A)
+        {
+            if (character == 1)
+            {
+                u16[0xFFB000 + (object_size * i) + 0x30] = 0xB000
+            }
+            if (character == 2)
+            {
+                u16[0xFFB000 + (object_size * i) + 0x30] = 0xB04A
+            }
+            if (character == 3)
+            {
+                u16[0xFFB000 + (object_size * i) + 0x30] = 0x0000
+            }
+        }
+    }
 }
 
 
