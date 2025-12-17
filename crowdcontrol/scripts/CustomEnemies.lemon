@@ -42,11 +42,7 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 	
 	if (objA0.update_address == makeCallable(Jimmy.Update))
 	{
-		if (objA0.render_flags & render_flag.FLIP_X)
-		{
-			px += 40
-		}
-		SpriteHandle spr = Renderer.addSpriteHandle("jimmy", px, py - 16, renderQueue)
+		SpriteHandle spr = Renderer.addSpriteHandle("jimmy", px, py, renderQueue)
 		spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
 		spr.setBlendMode(1)
 		// spr.setCoordinateSpace(1)
