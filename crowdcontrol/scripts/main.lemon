@@ -110,10 +110,18 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
             objA1.base_state = 0
             objA1.position.x = camera.position.x
             objA1.position.y = camera.position.y
-            objA1.position.x.u16 += System.rand() & 0x1F
-            objA1.position.y.u16 += System.rand() & 0x1F
-            objA1.position.x.u16 += (getScreenWidth() / 2) + 64
-            objA1.position.y.u16 += (getScreenHeight() / 2) - 10
+            objA1.position.x.u16 += System.rand() & 0x3F - 0x20
+            objA1.position.y.u16 += System.rand() & 0x3F - 0x20
+            objA1.position.x.u16 += (getScreenWidth() / 2)
+            objA1.position.y.u16 += (getScreenHeight() / 2)
+            if (char.flags & char.flag.FACING_LEFT)
+            {
+                objA1.position.x.u16 -= 64 + char.box_size.x
+            }
+            else
+            {
+                objA1.position.x.u16 += 64
+            }
             u16[A1 + 0x2e] = 600
             objA1.countdown_callback = addressof(UnloadObject)
             return CCStatusCode.SUCCESS
