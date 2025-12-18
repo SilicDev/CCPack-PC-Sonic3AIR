@@ -39,13 +39,34 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 {
 
 	bool prioFlag = (objA0.sprite_attributes & sprite_attribute.PRIORITY) != 0
+	bool flipX = (objA0.render_flags & render_flag.FLIP_X) != 0
 	
 	if (objA0.update_address == makeCallable(Jimmy.Update))
 	{
-		SpriteHandle spr = Renderer.addSpriteHandle("jimmy", px, py, renderQueue)
-		spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+		// for now, just using the ring animation frame as a test.
+		// ideally, should be managed within the object proper so that animation can pause when not moving etc.
+		// static_rings.animframe goes 0 to 3
+		SpriteHandle spr = Renderer.addSpriteHandle(stringformat("jimmy-%d",static_rings.animframe), px, py, renderQueue)
+		spr.setFlipX(flipX)
 		spr.setBlendMode(1)
-		// spr.setCoordinateSpace(1)
+	
+		if (static_rings.animframe < 2)
+		{
+			// for now, just attach the exhaust directly
+			// ideally should be a spawned child object that gets left behind rather then being "dragged"
+			if (flipX)
+			{			
+				px -= 28
+			}
+			else
+			{
+				px += 28
+			}
+			spr = Renderer.addSpriteHandle(stringformat("jimmy-exhaust-%d",static_rings.animframe), px, py, renderQueue)
+			spr.setBlendMode(1)
+		}
+
+
 		return true
 	}
 	return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)

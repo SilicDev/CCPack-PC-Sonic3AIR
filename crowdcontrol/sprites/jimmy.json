@@ -1,3 +1,11 @@
 {
-	"jimmy":	  { "File": "jimmy.png", "Rect": "0,0,41,30", "Center": "20,16" }
+	"jimmy-0":	  { "File": "jimmy.png", "Rect": "0,0,41,30", "Center": "20,16" },
+	"jimmy-1":	  { "File": "jimmy.png", "Rect": "56,0,41,30", "Center": "20,16" },
+	"jimmy-2":	  { "File": "jimmy.png", "Rect": "0,40,41,30", "Center": "20,16" },
+	"jimmy-3":	  { "File": "jimmy.png", "Rect": "56,40,41,30", "Center": "20,16" },
+	
+	"jimmy-exhaust-0":	  { "File": "jimmy.png", "Rect": "112,0,8,8", "Center": "4,4" },
+	"jimmy-exhaust-1":	  { "File": "jimmy.png", "Rect": "112,16,8,8", "Center": "4,4" },
+	"jimmy-exhaust-2":	  { "File": "jimmy.png", "Rect": "112,32,8,8", "Center": "4,4" }
+	
 }
