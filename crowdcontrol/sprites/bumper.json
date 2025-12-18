@@ -1,0 +1,17 @@
+{
+    "bumper_0x01": {
+        "File": "bumper.png",
+        "Rect": "0,0,24,24",
+        "Center": "12,12"
+    },
+    "bumper_0x02": {
+        "File": "bumper.png",
+        "Rect": "24,0,24,24",
+        "Center": "12,12"
+    },
+    "bumper_0x03": {
+        "File": "bumper.png",
+        "Rect": "0,0,24,24",
+        "Center": "12,12"
+    }
+}

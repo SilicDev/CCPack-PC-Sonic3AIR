@@ -50,7 +50,7 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
-        SwapToSonic()
+        CrowdControl.SwapToSonic()
         A0 = ABackUp
 		return CCStatusCode.SUCCESS
     }
@@ -58,7 +58,7 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
-        SwapToTails()
+        CrowdControl.SwapToTails()
         A0 = ABackUp
 		return CCStatusCode.SUCCESS
     }
@@ -66,7 +66,7 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
-        SwapToKnuckles()
+        CrowdControl.SwapToKnuckles()
         A0 = ABackUp
 		return CCStatusCode.SUCCESS
     }
@@ -102,6 +102,32 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
 		A1 = ABackUp
 		return CCStatusCode.SUCCESS
 	}
+    if (effectCode == "Bumper")
+    {
+        if (allocDynamicObjectStd())
+        {
+            objA1.update_address = addressof(Bumper.Init)//0x032ef0
+            objA1.base_state = 0
+            objA1.position.x = camera.position.x
+            objA1.position.y = camera.position.y
+            objA1.position.x.u16 += System.rand() & 0x3F - 0x20
+            objA1.position.y.u16 += System.rand() & 0x3F - 0x20
+            objA1.position.x.u16 += (getScreenWidth() / 2)
+            objA1.position.y.u16 += (getScreenHeight() / 2)
+            if (char.flags & char.flag.FACING_LEFT)
+            {
+                objA1.position.x.u16 -= 64 + char.box_size.x
+            }
+            else
+            {
+                objA1.position.x.u16 += 64
+            }
+            u16[A1 + 0x2e] = 600
+            objA1.countdown_callback = addressof(UnloadObject)
+            return CCStatusCode.SUCCESS
+        }
+		return CCStatusCode.FAILURE
+    }
 	if (effectCode == "Slap" && u8[0xffffb000 + 0x2e] == 0)
 	{
 		timerA = true
@@ -152,43 +178,43 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
 }
 
 // return is unused for now, just adding in case we have additional fail conditions
-function bool SwapToSonic()
+function bool CrowdControl.SwapToSonic()
 {
     char.update_address = 0x010a94
     u16 sprio = u16[0xFFB00A]
     char.base_state = 0x00
     char.sprite_attributes = 0x0680 | (0x8000 & sprio)
     global.characters = CHARS_SONIC_ALONE
-    SnapTails(3)
+    CrowdControl.SnapTails(3)
     //Character.Initialization.Sonic()
     return true
 }
 
-function bool SwapToTails()
+function bool CrowdControl.SwapToTails()
 {
     char.update_address = 0x01365c
     u16 sprio = u16[0xFFB00A]
     char.base_state = 0x00
-    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
+    char.sprite_attributes = 0x06A0 | (0x8000 & sprio)
     global.characters = CHARS_TAILS_ALONE
-    SnapTails(1)
+    CrowdControl.SnapTails(1)
     //Character.Initialization.Tails()
     return true
 }
 
-function bool SwapToKnuckles()
+function bool CrowdControl.SwapToKnuckles()
 {
     char.update_address = 0x016444
     u16 sprio = u16[0xFFB00A]
     char.base_state = 0x00
     char.sprite_attributes = 0x0680 | (0x8000 & sprio)
     global.characters = CHARS_KNUCKLES_ALONE
-    SnapTails(3)
+    CrowdControl.SnapTails(3)
     //Character.Initialization.Knuckles()
     return true
 }
 
-function void SnapTails(u8 character)
+function void CrowdControl.SnapTails(u8 character)
 {
     for (u8 i = 95; i < 108; i++)
     {
@@ -210,6 +236,18 @@ function void SnapTails(u8 character)
     }
 }
 
+function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
+{
+
+	bool prioFlag = (objA0.sprite_attributes & sprite_attribute.PRIORITY) != 0
+
+    if (objA0.update_address == addressof(Bumper.MainUpdate) && u16[A0 + 0x2e] != 0)
+	{
+		return Bumper.onWriteToSpriteTable(px, py, renderQueue, prioFlag)
+	}
+	return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
+}
+
 
 // Dev feature just for testing - must get disabled / removed before release!
 #if 1
@@ -225,7 +263,7 @@ function void Debugging.debugDraw()
 	{
 		if (!key2_state)
 		{
-			Game.triggerCrowdControlEffect("AddRing", 1)
+			Game.triggerCrowdControlEffect("Bumper", 1)
 			key2_state = true
 		}
 	}
@@ -238,5 +276,5 @@ function void Debugging.debugDraw()
 
 #endif
 
-
 include EnemySpawn
+include Bumpers

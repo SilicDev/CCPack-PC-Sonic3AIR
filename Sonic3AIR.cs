@@ -27,6 +27,8 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 5, Description = "Change the character to Tails." },
                 new("Change to Knuckles", "CharKnuckles")
                     { Price = 5, Description = "Change the character to Knuckles." },
+                new("Spawn Bumper", "Bumper")
+                    { Price = 5, Description = "Spawns a Bumper in front of the player." },
                 new("Give Shield", "shieldBlue")
                     { Price = 3, Description = "Gives A Shield to the Player" },
                 new("Give Fire Shield", "shieldFire")
