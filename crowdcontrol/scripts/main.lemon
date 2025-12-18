@@ -228,6 +228,18 @@ function void CrowdControl.SnapTails(u8 character)
     }
 }
 
+function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
+{
+
+	bool prioFlag = (objA0.sprite_attributes & sprite_attribute.PRIORITY) != 0
+
+    if (objA0.update_address == addressof(Bumper.MainUpdate) && u16[A0 + 0x2e] != 0)
+	{
+		return Bumper.onWriteToSpriteTable(px, py, renderQueue, prioFlag)
+	}
+	return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
+}
+
 
 // Dev feature just for testing - must get disabled / removed before release!
 #if 1
