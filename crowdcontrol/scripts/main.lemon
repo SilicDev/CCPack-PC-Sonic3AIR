@@ -128,6 +128,34 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
         }
 		return CCStatusCode.FAILURE
     }
+    if (effectCode == "Eggbox")
+    {
+        if (allocDynamicObjectStd())
+        {
+            objA1.update_address = addressof(MonitorIntact.BaseUpdate)//0x01d566
+            objA1.base_state = 0
+            objA1.subtype2c = 0x02
+            objA1.state = 0x02
+            objA1.position.x = camera.position.x
+            objA1.position.y = camera.position.y
+            objA1.position.x.u16 += System.rand() & 0x1F - 0x10
+            objA1.position.y.u16 += System.rand() & 0x1F - 0x10
+            objA1.position.x.u16 += (getScreenWidth() / 2)
+            objA1.position.y.u16 += (getScreenHeight() / 2)
+            if (char.flags & char.flag.FACING_LEFT)
+            {
+                objA1.position.x.u16 -= 32 + char.box_size.x
+            }
+            else
+            {
+                objA1.position.x.u16 += 32
+            }
+            u16[A1 + 0x2e] = 600
+            objA1.countdown_callback = addressof(UnloadObject)
+            return CCStatusCode.SUCCESS
+        }
+		return CCStatusCode.FAILURE
+    }
 	if (effectCode == "Slap" && u8[0xffffb000 + 0x2e] == 0)
 	{
 		timerA = true
@@ -278,3 +306,28 @@ function void Debugging.debugDraw()
 
 include EnemySpawn
 include Bumpers
+
+
+//# address-hook(0x01d566) end(0x01d570)
+function void MonitorIntact.BaseUpdate()
+{
+	if (objA0.flags2e != 0)
+	{
+        objA0.position.x.frac = 1 // unused for any object except the player, using it as a flag
+    }
+    if (objA0.position.x.frac == 1)
+    {
+        --u16[A0 + 0x2e]
+        if (u16[A0 + 0x2e] == 0)
+        {
+            UnloadObject()
+        }
+    }
+	// Targets:
+	//  - 0x01d57e	-> objA0.base_state = 0x00		-> Initialization
+	//  - 0x01d5dc	-> objA0.base_state = 0x02		-> Regular update
+	//  - 0x01d716	-> objA0.base_state = 0x04		-> Gets opened
+	//  - 0x01d61e	-> objA0.base_state = 0x06		-> Animation update
+	//  - 0x01d61a	-> objA0.base_state = 0x08		-> Simply calls "DrawOrUnloadObject"
+	call tableLookupAddress(0x01d574, objA0.base_state)
+}

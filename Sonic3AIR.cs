@@ -29,14 +29,16 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 5, Description = "Change the character to Knuckles." },
                 new("Spawn Bumper", "Bumper")
                     { Price = 5, Description = "Spawns a Bumper in front of the player." },
+                new("Spawn Eggbox", "Eggbox")
+                    { Price = 5, Description = "Spawns a Eggbox in front of the player." },
                 new("Give Shield", "shieldBlue")
                     { Price = 3, Description = "Gives A Shield to the Player" },
                 new("Give Fire Shield", "shieldFire")
-                    { Price = 3, Description = "Gives A Shield to the Player" },
+                    { Price = 3, Description = "Gives A Fire Shield to the Player" },
                 new("Give Thunder Shield", "shieldThunder")
-                    { Price = 3, Description = "Gives A Shield to the Player" },
+                    { Price = 3, Description = "Gives A Thunder Shield to the Player" },
                 new("Give Bubble Shield", "shieldBubble")
-                    { Price = 3, Description = "Gives A Shield to the Player" },
+                    { Price = 3, Description = "Gives A Bubble Shield to the Player" },
             ];
             return effects;
         }
