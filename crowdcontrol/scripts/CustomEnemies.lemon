@@ -3,13 +3,11 @@ function void Jimmy.Update()
 {
 
 	if (objA0.base_state == 0x00)
-	{
 		Jimmy.Init()
-	}
+	else if (objA0.base_state == 0x02)
+		Jimmy.state2()
 	else
-	{
 		call tableLookupAddress(0x089838, objA0.base_state)
-	}
 
 	Enemy.DrawOrUnload()
 }
@@ -23,15 +21,55 @@ function void Jimmy.Init()
 
 	u32[A0 + 0x30] = 0x089b2c
 	objA0.render_flags |= render_flag.FLIP_X
-	if (objA0.subtype2c == 2)
-		objA0.render_flags |= render_flag.FLIP_Y
 
 	D0.u16 = 0x0400
 	u16[A0 + 0x3a] = D0.u16
 	objA0.velocity.x = D0.u16
 	u16[A0 + 0x3c] = 0x20
 	objA0.flags38 &= ~0x08
+	
+	objA0.collision_attributes = collision.size.20x12
+	objA0.hitbox_extends.y = 12
+	
 }
+
+
+
+
+function void Jimmy.state2()
+{
+	Object.AnimationProgressByLocalA1.DistinctTimer_CheckFlipX()
+	if (D2.u16 != 0 && objA0.animation.frame == 6)
+	{
+		objA0.flags38 |= 0x02
+	}
+
+	fn08482a()
+	if (objA0.velocity.x != 0)
+	{
+		UpdateMovementSimple()
+		if (objA0.velocity.y >= 0)
+		{
+			CheckGroundCollision()
+			if (D1.s16 <= 0)
+			{
+				objA0.position.y.u16 += D1.s16
+				objA0.velocity.y = 0
+			}
+		}
+		Object.CountdownAndTrigger()
+		return
+	}
+
+	objA0.base_state = 0x04
+	u32[A0 + 0x30] = 0x089b42
+	objA0.countdown_callback = 0x089932
+	objA0.animation.frame = 0
+	objA0.animation.timer = 0
+}
+
+
+
 
 // This function probably needs to be shared with any other custom sprites we do
 // (eg, for bumpers to render correctly outside of carnival night?)
@@ -71,3 +109,4 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 	}
 	return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
 }
+
