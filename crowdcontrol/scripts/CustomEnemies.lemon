@@ -1,74 +1,211 @@
 
+constant u8 Jimmy.state.init = 0
+constant u8 Jimmy.state.chase = 2
+constant u8 Jimmy.state.huff = 4
+constant u16 Jimmy.maxSpeed = 1024
+constant u16 Jimmy.accel = 32
+
 function void Jimmy.Update()
 {
 
-	if (objA0.base_state == 0x00)
+	// debugLog(stringformat("Jimmy: State: %d, frame: %d, timer: %d, x:%d, y:%d, vx: %d, vy: %d", objA0.base_state, objA0.animation.frame, objA0.animation.timer, objA0.position.x, objA0.position.y, objA0.velocity.x, objA0.velocity.y))
+
+	if (objA0.base_state == Jimmy.state.init)
 		Jimmy.Init()
-	else if (objA0.base_state == 0x02)
-		Jimmy.state2()
-	else
-		call tableLookupAddress(0x089838, objA0.base_state)
+	else if (objA0.base_state == Jimmy.state.chase)
+		Jimmy.Chase()
+	else if (objA0.base_state == Jimmy.state.huff)
+		Jimmy.Huff()		
 
 	Enemy.DrawOrUnload()
 }
 
 function void Jimmy.Init()
 {
-	objA0.countdown_value = 0x0800
-	objA0.countdown_callback = 0x089926
+	objA0.countdown_value = 0
+	objA0.countdown_callback = 0
 
-	setupObjectAttributesFull(0x089b06)
-
-	u32[A0 + 0x30] = 0x089b2c
+	u32[A0 + 0x30] = 0
 	objA0.render_flags |= render_flag.FLIP_X
+	objA0.render_flags |= render_flag.WORLD
+	objA0.render_flags |= render_flag.VISIBLE
 
-	D0.u16 = 0x0400
-	u16[A0 + 0x3a] = D0.u16
-	objA0.velocity.x = D0.u16
-	u16[A0 + 0x3c] = 0x20
-	objA0.flags38 &= ~0x08
+	objA0.velocity.x = 0
+	objA0.velocity.y = 0
 	
-	objA0.collision_attributes = collision.size.20x12
-	objA0.hitbox_extends.y = 12
-	
-}
-
-
-
-
-function void Jimmy.state2()
-{
-	Object.AnimationProgressByLocalA1.DistinctTimer_CheckFlipX()
-	if (D2.u16 != 0 && objA0.animation.frame == 6)
-	{
-		objA0.flags38 |= 0x02
-	}
-
-	fn08482a()
-	if (objA0.velocity.x != 0)
-	{
-		UpdateMovementSimple()
-		if (objA0.velocity.y >= 0)
-		{
-			CheckGroundCollision()
-			if (D1.s16 <= 0)
-			{
-				objA0.position.y.u16 += D1.s16
-				objA0.velocity.y = 0
-			}
-		}
-		Object.CountdownAndTrigger()
-		return
-	}
-
-	objA0.base_state = 0x04
-	u32[A0 + 0x30] = 0x089b42
-	objA0.countdown_callback = 0x089932
 	objA0.animation.frame = 0
 	objA0.animation.timer = 0
+	
+	objA0.collision_attributes = collision.size.20x12
+	objA0.hitbox_extends.x = 20
+	objA0.hitbox_extends.y = 12
+	
+	// seems to be used to influence when it's renderd, so if not set, he stops rendering when his centre goes off screen
+	objA0.box_size.x = 32
+	objA0.box_size.y = 20
+	
+	objA0.base_state = Jimmy.state.chase
 }
 
 
+function void Jimmy.Chase()
+{
+
+	objA0.animation.timer++
+	if (objA0.animation.timer > 7)
+	{
+		objA0.animation.timer = 0
+		objA0.animation.frame++
+		objA0.animation.frame %= 4
+	}
+	
+	if (objA0.animation.timer == 0 && objA0.animation.frame == 0)
+	{	
+		// spawn puff of exhaust
+		if (allocDynamicObjectStd())
+		{
+			objA1.update_address = makeCallable(Jimmy.Smoke)
+			objA1.base_state = 2
+			objA1.render_flags |= render_flag.WORLD
+			objA1.render_flags |= render_flag.VISIBLE			
+			objA1.position.x = objA0.position.x
+			objA1.position.y = objA0.position.y
+			objA1.position.y.u16 -= 2
+			objA1.velocity.x = objA0.velocity.x
+			objA1.velocity.y = objA0.velocity.y
+			objA1.box_size.x = 8
+			objA1.box_size.y = 8
+			objA1.animation.frame = 0
+			objA1.animation.timer = 0
+
+			if (objA0.render_flags & render_flag.FLIP_X)
+			{
+				// jimmy going right, so spawn on left
+				objA1.position.x.u16 -= 24
+				objA1.velocity.x -= 128
+			}
+			else
+			{
+				objA1.position.x.u16 += 24
+				objA1.velocity.x += 128
+			}
+		}
+	}
+
+	// check direction to player
+	A1 = 0xffffb000 // player object
+	if (objA1.position.x.u16 > objA0.position.x.u16)
+	{
+		// accelerate right
+		if (objA0.velocity.x < 0 && objA0.velocity.x >= -Jimmy.accel)
+		{
+			objA0.velocity.x = 0
+			objA0.base_state = Jimmy.state.huff
+			objA0.animation.timer = 0
+		}
+		else
+			objA0.velocity.x = min(objA0.velocity.x + Jimmy.accel, Jimmy.maxSpeed)
+	}
+	else
+	{
+		// accelerate left
+		if (objA0.velocity.x > 0 && objA0.velocity.x <= Jimmy.accel)
+		{
+			objA0.velocity.x = 0
+			objA0.base_state = Jimmy.state.huff
+			objA0.animation.timer = 0
+		}
+		else
+			objA0.velocity.x = max(objA0.velocity.x - Jimmy.accel, -Jimmy.maxSpeed)
+	}
+
+	if (objA0.velocity.x != 0)
+		objA0.render_flags &= ~render_flag.FLIP_X
+	if (objA0.velocity.x > 0)
+		objA0.render_flags |= render_flag.FLIP_X
+
+	UpdateMovementWithGravity()
+}
+
+
+function void Jimmy.Huff()
+{
+	objA0.animation.frame = 0
+	
+	objA0.animation.timer++
+	if (objA0.animation.timer == 1)
+	{
+		// spawn puff of exhaust, but in front, as if he's exhaling in a huff
+		if (allocDynamicObjectStd())
+		{
+			objA1.update_address = makeCallable(Jimmy.Smoke)
+			objA1.base_state = 2
+			objA1.render_flags |= render_flag.WORLD
+			objA1.render_flags |= render_flag.VISIBLE			
+			objA1.position.x = objA0.position.x
+			objA1.position.y = objA0.position.y
+			objA1.position.y.u16 += 2
+			objA1.velocity.x = objA0.velocity.x
+			objA1.velocity.y = objA0.velocity.y
+			objA1.box_size.x = 8
+			objA1.box_size.y = 8
+			objA1.animation.frame = 0
+			objA1.animation.timer = 0
+
+			if (objA0.render_flags & render_flag.FLIP_X)
+			{
+				objA1.position.x.u16 += 24
+				objA1.velocity.x += 384
+			}
+			else
+			{
+				objA1.position.x.u16 -= 24
+				objA1.velocity.x -= 384
+			}
+		}
+	}
+	if (objA0.animation.timer > 30)
+	{
+		objA0.base_state = Jimmy.state.chase		
+	}
+	
+	UpdateMovementWithGravity()
+}
+
+function void Jimmy.Smoke()
+{
+	// debugLog(stringformat("JimmySmoke: State: %d, frame: %d, timer: %d, x:%d, y:%d, vx: %d, vy: %d", objA0.base_state, objA0.animation.frame, objA0.animation.timer, objA0.position.x, objA0.position.y, objA0.velocity.x, objA0.velocity.y))
+	
+	objA0.animation.timer++
+	if (objA0.animation.timer > 7)
+	{
+		objA0.animation.timer = 0
+		objA0.animation.frame++		
+	}
+	if (objA0.animation.frame > 2)
+	{
+		UnloadObject()
+		return
+	}
+	
+	UpdateMovementStraightSimple()
+	
+	Enemy.DrawOrUnload()
+}
+
+function void UpdateMovementWithGravity()
+{
+	UpdateMovementSimple()
+	if (objA0.velocity.y >= 0)
+	{
+		CheckGroundCollision()
+		if (D1.s16 <= 0)
+		{
+			objA0.position.y.u16 += D1.s16
+			objA0.velocity.y = 0
+		}
+	}
+}
 
 
 // This function probably needs to be shared with any other custom sprites we do
@@ -81,32 +218,16 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 	
 	if (objA0.update_address == makeCallable(Jimmy.Update))
 	{
-		// for now, just using the ring animation frame as a test.
-		// ideally, should be managed within the object proper so that animation can pause when not moving etc.
-		// static_rings.animframe goes 0 to 3
-		SpriteHandle spr = Renderer.addSpriteHandle(stringformat("jimmy-%d",static_rings.animframe), px, py, renderQueue)
+		SpriteHandle spr = Renderer.addSpriteHandle(stringformat("jimmy-%d",objA0.animation.frame), px, py, renderQueue)
 		spr.setFlipX(flipX)
 		spr.setBlendMode(1)
-	
-		if (static_rings.animframe < 2)
-		{
-			// for now, just attach the exhaust directly
-			// ideally should be a spawned child object that gets left behind rather then being "dragged"
-			if (flipX)
-			{			
-				px -= 28
-			}
-			else
-			{
-				px += 28
-			}
-			spr = Renderer.addSpriteHandle(stringformat("jimmy-exhaust-%d",static_rings.animframe), px, py, renderQueue)
-			spr.setBlendMode(1)
-		}
-
-
+		return true
+	}
+	if (objA0.update_address == makeCallable(Jimmy.Smoke))
+	{
+		SpriteHandle spr = Renderer.addSpriteHandle(stringformat("jimmy-exhaust-%d",objA0.animation.frame), px, py, renderQueue)
+		spr.setBlendMode(1)
 		return true
 	}
 	return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
 }
-
