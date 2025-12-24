@@ -1,14 +1,6 @@
 
 //# script-feature-level(2)
 
-constant u8 CCStatusCode.SUCCESS		= 0x00		// The effect executed successfully
-constant u8 CCStatusCode.FAILURE		= 0x01		// The effect failed to trigger, but is still available for use; viewer(s) will be refunded
-constant u8 CCStatusCode.UNAVAILABLE	= 0x02		// Same as FAILURE but the effect is no longer available for use for the remainder of the game
-constant u8 CCStatusCode.RETRY			= 0x03		// The effect cannot be triggered right now, try again in a few seconds - note: this is the "normal" failure response
-constant u8 CCStatusCode.PAUSED			= 0x06		// The timed effect has been paused and is now waiting
-constant u8 CCStatusCode.RESUME			= 0x07		// The timed effect has been resumed and is counting down again
-constant u8 CCStatusCode.FINISHED		= 0x08		// The timed effect has finished
-
 constant u8 object_size = 0x4A
 
 global bool timerA
@@ -21,88 +13,102 @@ function void PreFrameUpdate()
     }
 }
 
-function u8 Game.triggerCrowdControlEffect(string effectCode)
-{
-    return Game.triggerCrowdControlEffect(effectCode, 1)
-}
-
-function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
+function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 duration)
 {
 	// Debug output
-	//debugLog(effectCode)
+	//debugLog(code)
 
-	if (effectCode == "AddRing")
+	if (code == "AddRing")
 	{
 		addRings(quantity)
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
 	}
-	if (effectCode == "TakeRing")
+	if (code == "TakeRing")
     {
         if (player.total_rings < quantity)
         {
-            return CCStatusCode.FAILURE
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Not enough rings to take.")
+            return
         }
         D0 = -quantity
         AddRings()
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
     }
-    if (effectCode == "CharSonic")
+    if (code == "CharSonic")
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
         CrowdControl.SwapToSonic()
         A0 = ABackUp
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
     }
-    if (effectCode == "CharTails")
+    if (code == "CharTails")
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
         CrowdControl.SwapToTails()
         A0 = ABackUp
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
     }
-    if (effectCode == "CharKnuckles")
+    if (code == "CharKnuckles")
     {
 		u32 ABackUp = A0
 		A0 = 0xffffb000
         CrowdControl.SwapToKnuckles()
         A0 = ABackUp
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
     }
-    if (effectCode == "shieldFire")
+    if (code == "shieldFire")
 	{
 		u32 ABackUp = A1
 		A1 = 0xffffb000
 		ItemEffect.ApplyShieldFire()
 		A1 = ABackUp
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
 	}
-	if (effectCode == "shieldBubble")
+	if (code == "shieldBubble")
 	{
 		u32 ABackUp = A1
 		A1 = 0xffffb000
 		ItemEffect.ApplyShieldBubble()
 		A1 = ABackUp
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
 	}
-	if (effectCode == "shieldThunder")
+	if (code == "shieldThunder")
 	{
 		u32 ABackUp = A1
 		A1 = 0xffffb000
 		ItemEffect.ApplyShieldLightning()
 		A1 = ABackUp
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
 	}
-	if (effectCode == "shieldBlue")
+	if (code == "shieldBlue")
 	{
 		u32 ABackUp = A1
 		A1 = 0xffffb000
 		ItemEffect.applyShield(0, addressof(InstaShield.Init), SFX_CLASSICSHIELD)
 		A1 = ABackUp
-		return CCStatusCode.SUCCESS
+        
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+		return
 	}
-    if (effectCode == "Bumper")
+    if (code == "Bumper")
     {
         if (allocDynamicObjectStd())
         {
@@ -124,11 +130,15 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
             }
             u16[A1 + 0x2e] = 600
             objA1.countdown_callback = addressof(UnloadObject)
-            return CCStatusCode.SUCCESS
+        
+            CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+            return
         }
-		return CCStatusCode.FAILURE
+        
+        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+		return
     }
-    if (effectCode == "Eggbox")
+    if (code == "Eggbox")
     {
         if (allocDynamicObjectStd())
         {
@@ -152,11 +162,14 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
             }
             u16[A1 + 0x2e] = 600
             objA1.countdown_callback = addressof(UnloadObject)
-            return CCStatusCode.SUCCESS
+        
+            CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+            return
         }
-		return CCStatusCode.FAILURE
+        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+		return
     }
-	if (effectCode == "Slap" && u8[0xffffb000 + 0x2e] == 0)
+	if (code == "Slap" && u8[0xffffb000 + 0x2e] == 0)
 	{
 		timerA = true
 		u32 ABackUp = A0
@@ -198,11 +211,12 @@ function u8 Game.triggerCrowdControlEffect(string effectCode, u16 quantity)
 		}
 		
 		A0 = ABackUp
-		return CCStatusCode.SUCCESS
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
 	}
 
 	// For unknown effects
-	return CCStatusCode.UNAVAILABLE
+    base.CrowdControl.triggerEffect(id, code, quantity, duration)
 }
 
 // return is unused for now, just adding in case we have additional fail conditions
@@ -294,7 +308,7 @@ function void Debugging.debugDraw()
 	{
 		if (!key2_state)
 		{
-			Game.triggerCrowdControlEffect("Bumper", 1)
+			CrowdControl.triggerEffect(-1, "Bumper", 1, -1)
 			key2_state = true
 		}
 	}
