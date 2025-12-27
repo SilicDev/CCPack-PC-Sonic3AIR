@@ -1,24 +1,13 @@
-#if 1
-// temporary hook-up mechanism
-function void UpdateGamePause() 
+include TestHooks
+include enemies/?
+
+function u32 CrowdControl.Choose(u32 max)
 {
-	base.UpdateGamePause()
-	
-	// should probably put in something to ensure we're in standard play?
-    #if GAMEAPP >= 0x25021500
-	if (Input.buttonPressed(0, BUTTON_L))
-    #else
-    if (Input.buttonPressed(BUTTON_L))
-    #endif
-	{
-		if (!CrowdControl.SpawnRandomEnemy())
-		{
-			// should pass this back to crowd control so the user gets refunded
-			System.writeDisplayLine("Didn't trigger")
-		}
-	}	
+	#if GAMEAPP >= 0x25021500
+	// return System.randRange(0,max)
+	#endif
+	return 0
 }
-#endif
 
 function bool CrowdControl.SpawnRandomEnemy()
 {
@@ -32,14 +21,28 @@ function bool CrowdControl.SpawnRandomEnemy()
 	if (global.zone.apparent == 0x00)
 	{
 		// AIZ
-		updateAddress = addressof(CatakillerJr.BaseUpdate)
+		rand = CrowdControl.Choose(3)
+		if (rand == 0)
+		{
+			updateAddress = addressof(MonkeyDude.BaseUpdate)
+		}
+		else if (rand == 1)
+		{
+			updateAddress = addressof(Rhinobot.BaseUpdate)
+		}
+		else if (rand == 2)
+		{
+			updateAddress = addressof(CatakillerJr.BaseUpdate)
+		}
+		else if (rand == 3)
+		{
+			updateAddress = addressof(Bloominator.BaseUpdate)
+		}
 	}
 	else if (global.zone.apparent == 0x01)
 	{
 		// HCZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,5)
-        #endif
+		rand = CrowdControl.Choose(5)
 		if (rand == 0)
 		{
 			updateAddress = addressof(Blastoid.BaseUpdate)
@@ -68,9 +71,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x02)
 	{
 		// MGZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,3)
-        #endif
+		rand = CrowdControl.Choose(3)
 		if (rand == 0)
 		{
 			updateAddress = addressof(BubblesEnemy.Update)
@@ -91,9 +92,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x03)
 	{
 		// CNZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,2)
-        #endif
+		rand = CrowdControl.Choose(2)
 		if (rand == 0)
 		{
 			updateAddress = addressof(Batbot.BaseUpdate)
@@ -110,9 +109,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x05)
 	{
 		// ICZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,2)
-        #endif
+		rand = CrowdControl.Choose(2)
 		if (rand == 0)
 		{
 			// may want some mechanism to adjust the spawn position of this one upwards more.
@@ -130,9 +127,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x06)
 	{
 		// LBZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,4)
-        #endif
+		rand = CrowdControl.Choose(4)
 		if (rand == 0)
 		{
 			// may want some mechanism to adjust the spawn position of this one upwards more.
@@ -158,9 +153,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x07)
 	{
 		// MHZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,4)
-        #endif
+		rand = CrowdControl.Choose(4)
 		if (rand == 0)
 		{
 			updateAddress = addressof(Butterfly.Update)
@@ -185,9 +178,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x04)
 	{
 		// FBZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,1)
-        #endif
+		rand = CrowdControl.Choose(1)
 		if (rand == 0)
 		{
 			updateAddress = addressof(Blaster.BaseUpdate)
@@ -200,9 +191,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x08)
 	{
 		// SOZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,2)
-        #endif
+		rand = CrowdControl.Choose(2)
 		if (rand == 0)
 		{
 			// might not be killable if it doesn't spawn on ground (and so you can't roll into it)
@@ -225,13 +214,12 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone_act == 0x1601)
 	{
 		// HPZ
+		updateAddress =  makeCallable(Jimmy.Update)
 	}
 	else if (global.zone.apparent == 0x09)
 	{
 		// LRZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,2)
-        #endif
+		rand = CrowdControl.Choose(2)
 		if (rand == 0)
 		{
 			updateAddress = addressof(Fireworm.Hole.BaseUpdate)
@@ -255,9 +243,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	else if (global.zone.apparent == 0x0b)
 	{
 		// DEZ
-        #if GAMEAPP >= 0x25021500
-		rand = System.randRange(0,1)
-        #endif
+		rand = CrowdControl.Choose(1)
 		if (rand == 0)
 		{
 			updateAddress = addressof(Chainspike.BaseUpdate)
@@ -272,17 +258,20 @@ function bool CrowdControl.SpawnRandomEnemy()
 		// DDZ
 	}
 
-	
+	return CrowdControl.SpawnEnemy(updateAddress, 64, -10)
+}
+
+function bool CrowdControl.SpawnEnemy(u32 updateAddress, s16 xOffset, s16 yOffset)
+{
 	if (updateAddress != 0 && allocDynamicObjectStd())
 	{	
 		objA1.update_address = updateAddress
 		objA1.base_state = 0
 		
-		// for now, spawn a litte to the right of camera centre
 		objA1.position.x = camera.position.x
 		objA1.position.y = camera.position.y
-		objA1.position.x.u16 += (getScreenWidth() / 2) + 64
-		objA1.position.y.u16 += (getScreenHeight() / 2) - 10
+		objA1.position.x.u16 += (getScreenWidth() / 2) + xOffset
+		objA1.position.y.u16 += (getScreenHeight() / 2) + yOffset
 
 		return true
 	}

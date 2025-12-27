@@ -1,0 +1,15 @@
+
+function void ExtraMissile.Init()
+{
+	setupObjectAttributesFull(0x0831f0)
+	spawnSimpleChildObjects(0x08214a, 1)
+	u16[A0 + 0x3c] = 0xc006
+	objA0.update_address = 0x082038
+	objA0.render_flags |= render_flag.WORLD
+	objA0.render_flags |= render_flag.VISIBLE
+	
+	A1 = 0xffffb000 // player object
+	objA0.position.y = objA1.position.y // start in line with player
+	
+	fn082aa6()
+}

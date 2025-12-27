@@ -1,0 +1,195 @@
+
+constant u8 Jimmy.state.init = 0
+constant u8 Jimmy.state.chase = 2
+constant u8 Jimmy.state.huff = 4
+constant u16 Jimmy.maxSpeed = 1024
+constant u16 Jimmy.accel = 32
+
+function void Jimmy.Update()
+{
+
+	// debugLog(stringformat("Jimmy: State: %d, frame: %d, timer: %d, x:%d, y:%d, vx: %d, vy: %d", objA0.base_state, objA0.animation.frame, objA0.animation.timer, objA0.position.x, objA0.position.y, objA0.velocity.x, objA0.velocity.y))
+
+	if (objA0.base_state == Jimmy.state.init)
+		Jimmy.Init()
+	else if (objA0.base_state == Jimmy.state.chase)
+		Jimmy.Chase()
+	else if (objA0.base_state == Jimmy.state.huff)
+		Jimmy.Huff()		
+
+	Enemy.DrawOrUnload()
+}
+
+function void Jimmy.Init()
+{
+	objA0.countdown_value = 0
+	objA0.countdown_callback = 0
+
+	u32[A0 + 0x30] = 0
+	objA0.render_flags |= render_flag.FLIP_X
+	objA0.render_flags |= render_flag.WORLD
+	objA0.render_flags |= render_flag.VISIBLE
+
+	objA0.velocity.x = 0
+	objA0.velocity.y = 0
+	
+	objA0.animation.frame = 0
+	objA0.animation.timer = 0
+	
+	objA0.collision_attributes = collision.size.20x12
+	objA0.hitbox_extends.x = 20
+	objA0.hitbox_extends.y = 12
+	
+	// seems to be used to influence when it's renderd, so if not set, he stops rendering when his centre goes off screen
+	objA0.box_size.x = 32
+	objA0.box_size.y = 20
+	
+	objA0.base_state = Jimmy.state.chase
+}
+
+
+function void Jimmy.Chase()
+{
+
+	objA0.animation.timer++
+	if (objA0.animation.timer > 7)
+	{
+		objA0.animation.timer = 0
+		objA0.animation.frame++
+		objA0.animation.frame %= 4
+	}
+	
+	if (objA0.animation.timer == 0 && objA0.animation.frame == 0)
+	{	
+		// spawn puff of exhaust
+		if (allocDynamicObjectStd())
+		{
+			objA1.update_address = makeCallable(Jimmy.Smoke)
+			objA1.base_state = 2
+			objA1.render_flags |= render_flag.WORLD
+			objA1.render_flags |= render_flag.VISIBLE			
+			objA1.position.x = objA0.position.x
+			objA1.position.y = objA0.position.y
+			objA1.position.y.u16 -= 2
+			objA1.velocity.x = objA0.velocity.x
+			objA1.velocity.y = objA0.velocity.y
+			objA1.box_size.x = 8
+			objA1.box_size.y = 8
+			objA1.animation.frame = 0
+			objA1.animation.timer = 0
+
+			if (objA0.render_flags & render_flag.FLIP_X)
+			{
+				// jimmy going right, so spawn on left
+				objA1.position.x.u16 -= 24
+				objA1.velocity.x -= 128
+			}
+			else
+			{
+				objA1.position.x.u16 += 24
+				objA1.velocity.x += 128
+			}
+		}
+	}
+
+	// check direction to player
+	A1 = 0xffffb000 // player object
+	if (objA1.position.x.u16 > objA0.position.x.u16)
+	{
+		// accelerate right
+		if (objA0.velocity.x < 0 && objA0.velocity.x >= -Jimmy.accel)
+		{
+			objA0.velocity.x = 0
+			objA0.base_state = Jimmy.state.huff
+			objA0.animation.timer = 0
+		}
+		else
+			objA0.velocity.x = min(objA0.velocity.x + Jimmy.accel, Jimmy.maxSpeed)
+	}
+	else
+	{
+		// accelerate left
+		if (objA0.velocity.x > 0 && objA0.velocity.x <= Jimmy.accel)
+		{
+			objA0.velocity.x = 0
+			objA0.base_state = Jimmy.state.huff
+			objA0.animation.timer = 0
+		}
+		else
+			objA0.velocity.x = max(objA0.velocity.x - Jimmy.accel, -Jimmy.maxSpeed)
+	}
+
+	if (objA0.velocity.x != 0)
+		objA0.render_flags &= ~render_flag.FLIP_X
+	if (objA0.velocity.x > 0)
+		objA0.render_flags |= render_flag.FLIP_X
+
+	UpdateMovementWithGravity()
+}
+
+
+function void Jimmy.Huff()
+{
+	objA0.animation.frame = 0
+	
+	objA0.animation.timer++
+	if (objA0.animation.timer == 1)
+	{
+		// spawn puff of exhaust, but in front, as if he's exhaling in a huff
+		if (allocDynamicObjectStd())
+		{
+			objA1.update_address = makeCallable(Jimmy.Smoke)
+			objA1.base_state = 2
+			objA1.render_flags |= render_flag.WORLD
+			objA1.render_flags |= render_flag.VISIBLE			
+			objA1.position.x = objA0.position.x
+			objA1.position.y = objA0.position.y
+			objA1.position.y.u16 += 2
+			objA1.velocity.x = objA0.velocity.x
+			objA1.velocity.y = objA0.velocity.y
+			objA1.box_size.x = 8
+			objA1.box_size.y = 8
+			objA1.animation.frame = 0
+			objA1.animation.timer = 0
+
+			if (objA0.render_flags & render_flag.FLIP_X)
+			{
+				objA1.position.x.u16 += 24
+				objA1.velocity.x += 384
+			}
+			else
+			{
+				objA1.position.x.u16 -= 24
+				objA1.velocity.x -= 384
+			}
+		}
+	}
+	if (objA0.animation.timer > 30)
+	{
+		objA0.base_state = Jimmy.state.chase		
+	}
+	
+	UpdateMovementWithGravity()
+}
+
+function void Jimmy.Smoke()
+{
+	// debugLog(stringformat("JimmySmoke: State: %d, frame: %d, timer: %d, x:%d, y:%d, vx: %d, vy: %d", objA0.base_state, objA0.animation.frame, objA0.animation.timer, objA0.position.x, objA0.position.y, objA0.velocity.x, objA0.velocity.y))
+	
+	objA0.animation.timer++
+	if (objA0.animation.timer > 7)
+	{
+		objA0.animation.timer = 0
+		objA0.animation.frame++		
+	}
+	if (objA0.animation.frame > 2)
+	{
+		UnloadObject()
+		return
+	}
+	
+	UpdateMovementStraightSimple()
+	
+	Enemy.DrawOrUnload()
+}
+
