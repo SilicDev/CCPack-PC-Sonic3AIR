@@ -15,7 +15,7 @@ function void Jimmy.Update()
 	else if (objA0.base_state == Jimmy.state.chase)
 		Jimmy.Chase()
 	else if (objA0.base_state == Jimmy.state.huff)
-		Jimmy.Huff()		
+		Jimmy.Huff()
 
 	Enemy.DrawOrUnload()
 }
@@ -67,7 +67,7 @@ function void Jimmy.Chase()
 			objA1.update_address = makeCallable(Jimmy.Smoke)
 			objA1.base_state = 2
 			objA1.render_flags |= render_flag.WORLD
-			objA1.render_flags |= render_flag.VISIBLE			
+			objA1.render_flags |= render_flag.VISIBLE
 			objA1.position.x = objA0.position.x
 			objA1.position.y = objA0.position.y
 			objA1.position.y.u16 -= 2
@@ -141,7 +141,7 @@ function void Jimmy.Huff()
 			objA1.update_address = makeCallable(Jimmy.Smoke)
 			objA1.base_state = 2
 			objA1.render_flags |= render_flag.WORLD
-			objA1.render_flags |= render_flag.VISIBLE			
+			objA1.render_flags |= render_flag.VISIBLE
 			objA1.position.x = objA0.position.x
 			objA1.position.y = objA0.position.y
 			objA1.position.y.u16 += 2
@@ -166,7 +166,7 @@ function void Jimmy.Huff()
 	}
 	if (objA0.animation.timer > 30)
 	{
-		objA0.base_state = Jimmy.state.chase		
+		objA0.base_state = Jimmy.state.chase
 	}
 	
 	UpdateMovementWithGravity()
@@ -180,7 +180,7 @@ function void Jimmy.Smoke()
 	if (objA0.animation.timer > 7)
 	{
 		objA0.animation.timer = 0
-		objA0.animation.frame++		
+		objA0.animation.frame++
 	}
 	if (objA0.animation.frame > 2)
 	{

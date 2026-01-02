@@ -31,6 +31,8 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 5, Description = "Spawns a Bumper in front of the player." },
                 new("Spawn Eggbox", "Eggbox")
                     { Price = 5, Description = "Spawns a Eggbox in front of the player." },
+                new("Spawn Motobug", "Jimmy")
+                    { Price = 10, Description = "Spawns a Motobug to chase the player." },
                 new("Give Shield", "shieldBlue")
                     { Price = 3, Description = "Gives A Shield to the Player" },
                 new("Give Fire Shield", "shieldFire")

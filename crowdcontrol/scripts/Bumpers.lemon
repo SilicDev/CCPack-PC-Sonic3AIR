@@ -276,11 +276,15 @@ function void Bumper.CompetitionDraw()
 	DrawObject()
 }
 
-function bool Bumper.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue, bool prioFlag)
+function bool Bumper.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 {
-    SpriteHandle spr = Renderer.addSpriteHandle(stringformat("bumper_0x%02x", objA0.animation.frame), px, py, renderQueue)
-    spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
-    spr.setBlendMode(1)
-    // spr.setCoordinateSpace(1)
-    return true
+    if (objA0.update_address == addressof(Bumper.MainUpdate) && u16[A0 + 0x2e] != 0)
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("bumper_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    return false
 }
