@@ -4,6 +4,7 @@ constant u8 Jimmy.state.chase = 2
 constant u8 Jimmy.state.huff = 4
 constant u16 Jimmy.maxSpeed = 1024
 constant u16 Jimmy.accel = 32
+constant u16 Jimmy.duration = 1200
 
 function void Jimmy.Update()
 {
@@ -16,6 +17,13 @@ function void Jimmy.Update()
 		Jimmy.Chase()
 	else if (objA0.base_state == Jimmy.state.huff)
 		Jimmy.Huff()
+
+	objA0.countdown_value--
+	if (objA0.countdown_value == 0) 
+	{
+		Object.TriggerUnloading()
+		return
+	}
 
 	Enemy.DrawOrUnload()
 }
@@ -45,6 +53,8 @@ function void Jimmy.Init()
 	objA0.box_size.y = 20
 	
 	objA0.base_state = Jimmy.state.chase
+
+	objA0.countdown_value = Jimmy.duration
 }
 
 
@@ -72,7 +82,7 @@ function void Jimmy.Chase()
 			objA1.position.y = objA0.position.y
 			objA1.position.y.u16 -= 2
 			objA1.velocity.x = objA0.velocity.x
-			objA1.velocity.y = objA0.velocity.y
+			objA1.velocity.y = 0
 			objA1.box_size.x = 8
 			objA1.box_size.y = 8
 			objA1.animation.frame = 0
@@ -146,7 +156,7 @@ function void Jimmy.Huff()
 			objA1.position.y = objA0.position.y
 			objA1.position.y.u16 += 2
 			objA1.velocity.x = objA0.velocity.x
-			objA1.velocity.y = objA0.velocity.y
+			objA1.velocity.y = 0
 			objA1.box_size.x = 8
 			objA1.box_size.y = 8
 			objA1.animation.frame = 0
