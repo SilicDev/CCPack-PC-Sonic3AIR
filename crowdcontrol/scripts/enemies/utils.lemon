@@ -34,5 +34,18 @@ function bool EnemyUtils.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 		spr.setBlendMode(1)
 		return true
 	}
+	if (objA0.update_address == makeCallable(Asteron.Update))
+	{
+		SpriteHandle spr = Renderer.addSpriteHandle(stringformat("asteron-%d",objA0.animation.frame), px, py, renderQueue)
+		spr.setBlendMode(1)
+		return true
+	}
+	if (objA0.update_address == makeCallable(Asteron.Spike))
+	{
+		SpriteHandle spr = Renderer.addSpriteHandle(stringformat("asteron-spike-%d",objA0.animation.frame), px, py, renderQueue)
+		spr.setFlipX(flipX)
+		spr.setBlendMode(1)
+		return true
+	}
 	return false
 }

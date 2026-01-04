@@ -1,0 +1,9 @@
+{
+	"asteron-0":	  { "File": "asteron.png", "Rect": "0,0,32,32", "Center": "16,16" },
+	"asteron-1":	  { "File": "asteron.png", "Rect": "32,0,32,32", "Center": "16,16" },
+	"asteron-spike-0":  { "File": "asteron.png", "Rect": "72,8,8,16", "Center": "4,13" },
+	"asteron-spike-1":  { "File": "asteron.png", "Rect": "72,0,16,8", "Center": "14,6" },
+	"asteron-spike-2":  { "File": "asteron.png", "Rect": "72,0,16,8", "Center": "14,6" },
+	"asteron-spike-3":  { "File": "asteron.png", "Rect": "80,8,8,16", "Center": "7,8" },
+	"asteron-spike-4":  { "File": "asteron.png", "Rect": "80,8,8,16", "Center": "7,8" },
+}
