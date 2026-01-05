@@ -3,8 +3,6 @@
 
 constant u8 object_size = 0x4A
 
-global bool timerA
-
 function void PreFrameUpdate()
 {
     if (global.characters == CHARS_TAILS_ALONE)
@@ -17,6 +15,11 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 {
 	// Debug output
 	//debugLog(code)
+    if (u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT)
+    {
+        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+        return
+    }
 
 	if (code == "AddRing")
 	{
@@ -171,7 +174,11 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
 	if (code == "Slap" && u8[0xffffb000 + 0x2e] == 0)
 	{
-		timerA = true
+        if (u8[0xffffb000 + 0x2e] != 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            return
+        }
 		u32 ABackUp = A0
 		A0 = 0xffffb000
 		// u8[0xffffb000 + 0x20] = char.state.GOT_HURT
@@ -192,8 +199,8 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 		}
 		else
 		{
-			char.velocity.x = -0x500
-			char.velocity.y = -0x700
+			char.velocity.x = -0x200
+			char.velocity.y = -0x400
 		}
 		if (char.flags & char.flag.FACING_LEFT)
 		{
@@ -202,7 +209,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 
 		char.groundspeed = 0
 		char.state = char.state.GOT_HURT_PANIC
-		char.invuln.countdown = 0
+		char.invuln.countdown = 120
 
 		if (char.character == CHARACTER_SONIC)
 		{
@@ -222,7 +229,16 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             return
         }
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
-		return
+        return
+    }
+    if (code == "Kill")
+    {
+        u32 ABackUp = A0
+        A0 = 0xffffb000
+        Character.Die_noSound()
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        A0 = ABackUp
+        return
     }
 
 	// For unknown effects
@@ -319,7 +335,7 @@ function void Debugging.debugDraw()
 	{
 		if (!key2_state)
 		{
-			CrowdControl.triggerEffect(-1, "Jimmy", 1, -1)
+			CrowdControl.triggerEffect(-1, "Kill", 1, -1)
 			key2_state = true
 		}
 	}

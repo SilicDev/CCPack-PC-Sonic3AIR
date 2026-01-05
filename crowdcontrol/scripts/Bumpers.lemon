@@ -96,8 +96,8 @@ function void Bumper.MainUpdate()
 	}
     if (objA0.position.x.frac == 1)
     {
-        --u16[A0 + 0x2e]
-        if (u16[A0 + 0x2e] == 0)
+        objA0.countdown_value--
+        if (objA0.countdown_value == 0)
         {
             UnloadObject()
         }
