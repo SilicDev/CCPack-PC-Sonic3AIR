@@ -234,6 +234,16 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
 		return
     }
+    if (code == "Meansteron")
+    {
+        if (CrowdControl.SpawnEnemy(makeCallable(Meansteron.Update), 128, -32))
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+            return
+        }
+        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+		return
+    }
 
 	// For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -320,6 +330,7 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 
 global bool key2_state = false
 global bool key3_state = false
+global bool key4_state = false
 
 function void Debugging.debugDraw()
 {
@@ -350,6 +361,19 @@ function void Debugging.debugDraw()
 	else
 	{
 		key3_state = false
+	}
+
+	if (Key4)
+	{
+		if (!key4_state)
+		{
+			CrowdControl.triggerEffect(-1, "Meansteron", 1, -1)
+			key4_state = true
+		}
+	}
+	else
+	{
+		key4_state = false
 	}
 
 

@@ -1,0 +1,182 @@
+
+constant u8 Meansteron.state.init = 0
+constant u8 Meansteron.state.homing = 4
+
+constant u16 Meansteron.homing.duration = 180 // how long to move towards player before exploding
+constant u16 Meansteron.homing.speed = 0x400
+constant u16 Meansteron.homing.close = 40
+
+constant u16 Meansteron.spike.duration = 600
+constant u16 Meansteron.spike.speed = 0x600
+
+// angles are 0-255
+// objA0.value3b = current spin angle
+// objA0.value39 = rotation speed
+
+function void Meansteron.Update()
+{
+	if (objA0.base_state == Meansteron.state.init)
+		Meansteron.Init()
+	else if (objA0.base_state == Meansteron.state.homing)
+		Meansteron.Home()
+
+	Enemy.DrawOrUnload()
+}
+
+function void Meansteron.Init()
+{
+	objA0.countdown_value = 0
+	objA0.countdown_callback = 0
+
+	u32[A0 + 0x30] = 0
+	objA0.render_flags |= render_flag.FLIP_X
+	objA0.render_flags |= render_flag.WORLD
+	objA0.render_flags |= render_flag.VISIBLE
+
+	objA0.velocity.x = 0
+	objA0.velocity.y = 0
+	
+	objA0.animation.frame = 0
+	objA0.animation.timer = 0
+	
+	objA0.collision_attributes = collision.size.8x8 | collision.flag.THREAT
+	objA0.hitbox_extends.x = 8
+	objA0.hitbox_extends.y = 8
+	
+	objA0.box_size.x = 16
+	objA0.box_size.y = 16
+	
+	objA0.base_state = Meansteron.state.homing
+	objA0.animation.timer = Meansteron.homing.duration
+
+
+	// override starting position
+	A1 = 0xffffb000 // player object	
+	double startAngle = System.randomFloat() * 1.4 // gives a rough arc from above the player to in front of them
+
+	if (objA1.velocity.x < 0)
+		objA0.position.x.u16 = Math.roundToInt(objA1.position.x.u16 - Math.sin(startAngle) * 200)
+	else
+		objA0.position.x.u16 = Math.roundToInt(objA1.position.x.u16 + Math.sin(startAngle) * 200)
+
+	objA0.position.y.u16 = Math.roundToInt(objA1.position.y.u16 - Math.cos(startAngle) * 120)
+
+	Meansteron.AccelerateTowardsPlayer(1.0)
+
+	objA0.value39 = 128 + ( System.randRange( 1,4 ) * ( System.randRange(0,1) == 0 ? 1 : -1 ) )
+
+}
+
+
+function void Meansteron.Home()
+{
+
+	if (objA0.animation.timer == 0)
+	{
+
+		// TODO: don't just re-use the asteron spikes, do somethig to angle them based on the spin
+
+		objA0.update_address = addressof(SmallExplosion.BaseUpdate)
+		objA0.base_state = 0
+
+		// spawn spikes
+		for (u8 i=0;i<5;i++)
+		{
+			if (allocDynamicObjectStd())
+			{
+				objA1.update_address = makeCallable(Meansteron.Spike)
+				objA1.base_state = 2
+				objA1.render_flags |= render_flag.WORLD
+				objA1.render_flags |= render_flag.VISIBLE
+				objA1.position.x = objA0.position.x
+				objA1.position.y = objA0.position.y
+				objA1.box_size.x = 8
+				objA1.box_size.y = 8
+				objA1.animation.frame = i
+				objA1.animation.timer = Asteron.spike.duration
+
+				objA1.collision_attributes = collision.size.4x4 | collision.flag.THREAT
+				objA1.hitbox_extends.x = 4
+				objA1.hitbox_extends.y = 4
+
+				double angle = objA0.value3b * PI_DOUBLE / 128.0 + (i * PI_DOUBLE * 2.0 / 5.0)
+				objA1.value3b = Math.roundToInt(objA0.value3b + i * 256.0 / 5.0) & 0xFF
+
+				objA1.velocity.x = Math.roundToInt(Math.sin(angle) * Meansteron.spike.speed)
+				objA1.velocity.y = -Math.roundToInt(Math.cos(angle) * Meansteron.spike.speed)
+
+			}
+		}
+
+		return
+	}
+
+	objA0.animation.timer--
+
+	if (objA0.animation.timer % 3 == 0)
+		objA0.animation.frame = 1-objA0.animation.frame
+
+
+	// do spin
+	objA0.value3b = (objA0.value3b + (objA0.value39 - 128)) & 0xFF
+
+	if (Meansteron.AccelerateTowardsPlayer(0.4f))
+		objA0.animation.timer = 0 // explode next frame
+
+
+	UpdateMovementStraightSimple()
+}
+
+// a strength of zero will cause no adjustment
+function bool Meansteron.AccelerateTowardsPlayer(double strength)
+{
+
+	
+
+	A1 = 0xffffb000 // player object	
+	// get vector to player
+	double deltaX = double(objA1.position.x.u16) - double(objA0.position.x.u16)
+	double deltaY = double(objA1.position.y.u16) - double(objA0.position.y.u16)
+
+	// clamp to max speed we don't overaccelerate when far away
+	double speed = Math.sqrt( deltaX*deltaX + deltaY*deltaY )
+
+	bool isClose = speed < Meansteron.homing.close
+
+	if (speed > Meansteron.homing.speed)
+	{
+		deltaX *= ( Meansteron.homing.speed / speed )
+		deltaY *= ( Meansteron.homing.speed / speed )
+	}
+
+	// now, apply to existing velocity (with strength applied)
+	deltaX = objA0.velocity.x + strength*deltaX
+	deltaY = objA0.velocity.y + strength*deltaY
+
+	// and clamp again
+	speed = Math.sqrt( deltaX*deltaX + deltaY*deltaY )
+	if (speed > Meansteron.homing.speed)
+	{
+		deltaX *= ( Meansteron.homing.speed / speed )
+		deltaY *= ( Meansteron.homing.speed / speed )
+	}
+
+	objA0.velocity.x = Math.roundToInt(deltaX)
+	objA0.velocity.y = Math.roundToInt(deltaY)
+
+	return isClose
+}
+
+
+
+function void Meansteron.Spike()
+{
+	if (objA0.animation.timer == 0)
+	{
+		Object.TriggerUnloading()
+		return
+	}
+	objA0.animation.timer--
+	UpdateMovementStraightSimple()
+	Enemy.DrawOrUnload()	
+}
