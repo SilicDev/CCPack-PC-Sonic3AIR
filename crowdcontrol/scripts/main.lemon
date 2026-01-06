@@ -5,6 +5,8 @@ constant u8 object_size = 0x4A
 
 global bool blue_spheres_jail = false
 
+global bool global.game.prev_paused = false
+
 //# pre-update-hook
 function void PreFrameUpdate()
 {
@@ -27,13 +29,22 @@ function void PreFrameUpdate()
         blue_spheres_jail = false
         global.stage_type = 1
     }
+    if (!global.game.prev_paused && global.game.paused)
+    {
+        // Pause Effects
+    }
+    if (global.game.prev_paused && !global.game.paused)
+    {
+        // Resume Effects
+    }
+    global.game.prev_paused = global.game.paused
 }
 
 function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 duration)
 {
 	// Debug output
 	//debugLog(code)
-    if (u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT)
+    if ((u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT) || global.game.paused)
     {
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
         return
@@ -296,7 +307,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     if (code == "BlueSpheres")
     {
-        if (global.game_mode != 0x0c)
+        if (global.game_mode != 0x0c || global.zone == 0x0c || global.zone == 0x16 || level.boss_encounter || Game.isInSkippableCutscene())
         {
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
             return
