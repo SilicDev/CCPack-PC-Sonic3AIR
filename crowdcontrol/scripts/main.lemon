@@ -5,7 +5,11 @@ constant u8 object_size = 0x4A
 
 global bool blue_spheres_jail = false
 
-global bool global.game.prev_paused = false
+global bool CrowdControl.paused = false
+global bool CrowdControl.prev_paused = false
+
+global u32 invert_directions_timer = 0
+global u32 invert_directions_id = 0
 
 //# pre-update-hook
 function void PreFrameUpdate()
@@ -29,15 +33,35 @@ function void PreFrameUpdate()
         blue_spheres_jail = false
         global.stage_type = 1
     }
-    if (!global.game.prev_paused && global.game.paused)
+    CrowdControl.paused = global.game.paused || Game.isInSkippableCutscene()
+    if (!CrowdControl.prev_paused && CrowdControl.paused)
     {
         // Pause Effects
+        if (invert_directions_timer > 0)
+        {
+            CrowdControl.sendResponse(invert_directions_id, CCStatusCode.PAUSED, "")
+        }
     }
-    if (global.game.prev_paused && !global.game.paused)
+    if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
         // Resume Effects
+        if (invert_directions_timer > 0)
+        {
+            CrowdControl.sendResponse(invert_directions_id, CCStatusCode.RESUME, "")
+        }
     }
-    global.game.prev_paused = global.game.paused
+    if (!CrowdControl.paused)
+    {
+        if (invert_directions_timer > 0)
+        {
+            invert_directions_timer--
+            if (invert_directions_timer == 0)
+            {
+                CrowdControl.sendResponse(invert_directions_id, CCStatusCode.FINISHED, "")
+            }
+        }
+    }
+    CrowdControl.prev_paused = CrowdControl.paused
 }
 
 function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 duration)
@@ -459,6 +483,19 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
         return
     }
+    if (code == "InvertControls")
+    {
+        if (invert_directions_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        invert_directions_id = id
+        
+        invert_directions_timer = duration / 1000 * 60
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -556,7 +593,7 @@ function void Debugging.debugDraw()
 	{
 		if (!key2_state)
 		{
-			CrowdControl.triggerEffect(-1, "HorizontalSpring", 1, -1)
+			CrowdControl.triggerEffect(-1, "InvertControls", 1, 10)
 			key2_state = true
 		}
 	}
@@ -659,6 +696,118 @@ function void SpringHorizontal.Update()
         }
     }
     base.SpringHorizontal.Update()
+}
+
+//# address-hook(0x0010de) end(0x001118)
+function void UpdateControllers()
+{
+	#if STANDALONE
+	{
+		// The following would be the correct implementation for Oxygen,
+		// but we don't do that here and rather in "waitForNextFrame" to ensure that controllers get updated each frame
+	/*
+		control.pad1.state = Input.getController(0)
+		control.pad1.pressed = control.pad1.state & ~Input.getControllerPrevious(0)
+		control.pad2.state = Input.getController(1)
+		control.pad2.pressed = control.pad2.state & ~Input.getControllerPrevious(1)
+	*/
+	}
+	#else
+	{
+		A0 = 0xfffff604		// Address of "control.pad1"
+		A1 = 0xa10003		// Hardware address for physical controller port 1
+
+		for (u8 i = 0; i < 2; ++i)
+		{
+			// Two loops, one for each controller port
+			u8[A1] = 0
+			D0.u8 = (u8[A1] << 2) & (CONTROL_A | CONTROL_START)
+
+			u8[A1] = 0x40
+			D1.u8 = u8[A1] & (CONTROL_B | CONTROL_C)
+            if (invert_directions_timer > 0 && !CrowdControl.paused)
+            {
+                u8 temp = 0
+                if (u8[A1] & CONTROL_UP)
+                {
+                    temp |= CONTROL_DOWN
+                }
+                if (u8[A1] & CONTROL_DOWN)
+                {
+                    temp |= CONTROL_UP
+                }
+                if (u8[A1] & CONTROL_LEFT)
+                {
+                    temp |= CONTROL_RIGHT
+                }
+                if (u8[A1] & CONTROL_RIGHT)
+                {
+                    temp |= CONTROL_LEFT
+                }
+                D1.u8 |= temp
+            }
+            else {
+                D1.u8 |= u8[A1] & CONTROL_DPAD
+            }
+
+			D0.u8 = (D0.u8 | D1.u8) ^ 0xff		// Currently pressed buttons
+			D1.u8 = u8[A0] ^ D0.u8				// Clearing buttons pressed in previous storage
+
+			u8[A0] = D0.u8					// Set button held states
+			u8[A0+1] = D1.u8 & D0.u8		// Set button pressed states
+
+			A0 += 2		// To next input storage address
+			A1 += 2		// To next controller port address
+		}
+	}
+	#endif
+}
+
+function void waitForNextFrame()
+{
+    base.waitForNextFrame()
+    if (invert_directions_timer > 0 && !CrowdControl.paused)
+    {
+        u8 temp = control.pad1.state & (CONTROL_ABC | CONTROL_START)
+        if (control.pad1.state & CONTROL_UP)
+        {
+            temp |= CONTROL_DOWN
+        }
+        if (control.pad1.state & CONTROL_DOWN)
+        {
+            temp |= CONTROL_UP
+        }
+        if (control.pad1.state & CONTROL_LEFT)
+        {
+            temp |= CONTROL_RIGHT
+        }
+        if (control.pad1.state & CONTROL_RIGHT)
+        {
+            temp |= CONTROL_LEFT
+        }
+        control.pad1.state = temp
+        control.pad1.pressed = control.pad1.state & ~Input.getControllerPrevious(0)
+        
+        temp = control.pad2.state & (CONTROL_ABC | CONTROL_START)
+        if (control.pad2.state & CONTROL_UP)
+        {
+            temp |= CONTROL_DOWN
+        }
+        if (control.pad2.state & CONTROL_DOWN)
+        {
+            temp |= CONTROL_UP
+        }
+        if (control.pad2.state & CONTROL_LEFT)
+        {
+            temp |= CONTROL_RIGHT
+        }
+        if (control.pad2.state & CONTROL_RIGHT)
+        {
+            temp |= CONTROL_LEFT
+        }
+        control.pad2.state = temp
+        control.pad2.pressed = control.pad2.state & ~Input.getControllerPrevious(1)
+    }
 }
 
 function void CrowdControl.SlapPlayer()

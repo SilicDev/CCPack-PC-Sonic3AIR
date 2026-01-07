@@ -66,6 +66,8 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 3, Description = "Gives A Thunder Shield to the Player" },
                 new("Give Bubble Shield", "shieldBubble")
                     { Price = 3, Description = "Gives A Bubble Shield to the Player" },
+                new("Invert Controls", "InvertControls")
+                    { Price = 50, Duration = 20, Description = "Inverts the player's controls." },
             ];
             return effects;
         }
