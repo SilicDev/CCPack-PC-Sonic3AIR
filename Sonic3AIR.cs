@@ -44,6 +44,10 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 10, Description = "Shove the player forward with lots of speed." },
                 new("Reverse!", "Reverse")
                     { Price = 10, Description = "Shove the player backward with lots of speed." },
+                new("Grant Speed Shoes", "SpeedShoes")
+                    { Price = 40, Description = "Gives Speed Shoes to the player." },
+                new("Grant Invincibility", "Invincibility")
+                    { Price = 40, Description = "Gives Invicibility to the player." },
                 new("Spawn Bumper", "Bumper")
                     { Price = 5, Description = "Spawns a Bumper in front of the player." },
                 new("Spawn Eggbox", "Eggbox")

@@ -357,6 +357,40 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "SpeedShoes")
+    {
+        if (u8[0xffffb000 + 0x2b] && char.bonus.SPEED_UP)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            return
+        }
+        u32 ABackUp = A1 //A1 needed for ItemEffect.Apply*
+        u32 A2BackUp = A2 //A2 needed for ItemEffect.Apply*, prevents a random write
+        A1 = 0xffffb000
+        A2 = 0xfffffecc
+        ItemEffect.ApplySpeedUp()
+        A1 = ABackUp
+        A2 = A2BackUp
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
+    if (code == "Invincibility")
+    {
+        if (u8[0xffffb000 + 0x2b] && char.bonus.INVINCIBLE)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+            return
+        }
+        u32 ABackUp = A1 //A1 needed for ItemEffect.Apply*
+        u32 A2BackUp = A2 //A2 needed for ItemEffect.Apply*, prevents a random write
+        A1 = 0xffffb000
+        A2 = 0xfffffecc
+        ItemEffect.ApplyInvincibility()
+        A1 = ABackUp
+        A2 = A2BackUp
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
