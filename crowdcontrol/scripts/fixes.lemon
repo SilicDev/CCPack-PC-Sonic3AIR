@@ -1,0 +1,26 @@
+global u8 forceChar = 0xFF
+
+function u8 getMainCharacter()
+{
+    if (forceChar != 0xFF)
+        return forceChar
+    return base.getMainCharacter()
+}
+
+// Hidden Palace Knuckles boss
+//# address-hook(0x063d1a) end(0x063dd2)
+function void fn063d1a()
+{
+    forceChar = CHARACTER_SONIC
+    base.fn063d1a()
+    forceChar = 0xFF
+}
+
+// Buttons for cutscene Knuckles to push (eg, AIZ2)
+//# address-hook(0x065bd4) end(0x065bf6)
+function void fn065bd4()
+{
+    forceChar = CHARACTER_SONIC
+    base.fn065bd4()
+    forceChar = 0xFF
+}
