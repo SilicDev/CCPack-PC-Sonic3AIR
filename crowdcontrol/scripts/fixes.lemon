@@ -1,0 +1,16 @@
+global u8 forceChar = 0xFF
+
+function u8 getMainCharacter()
+{
+    if (forceChar != 0xFF)
+        return forceChar
+    return base.getMainCharacter()
+}
+
+//# address-hook(0x063d1a) end(0x063dd2)
+function void fn063d1a()
+{
+    forceChar = CHARACTER_SONIC
+    base.fn063d1a()
+    forceChar = 0xFF
+}
