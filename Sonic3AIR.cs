@@ -68,6 +68,10 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 3, Description = "Gives A Bubble Shield to the Player" },
                 new("Invert Controls", "InvertControls")
                     { Price = 50, Duration = 20, Description = "Inverts the player's controls." },
+                new("Disable Jump", "NoJump")
+                    { Price = 50, Duration = 10, Description = "Disables the player's ability to jump." },
+                new("Disable Jump Abilities", "NoJumpAbility")
+                    { Price = 50, Duration = 20, Description = "Disables the player's jump abilities (Instashield, Flight, Glide)." },
             ];
             return effects;
         }
