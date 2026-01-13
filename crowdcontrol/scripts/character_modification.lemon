@@ -1,0 +1,44 @@
+//# translated(0x0117da) end(0x0118ba)
+//# translated(0x015002) end(0x0150d8)
+//# translated(0x017710) end(0x0177e8)
+function bool Character.CheckStartJump()
+{
+    if (no_jump_timer > 0)
+    {
+        return false
+    }
+    return base.Character.CheckStartJump()
+}
+
+//# address-hook(0x016e60)
+function void fn016e60() //Character.KnucklesWallIdleUpdate
+{
+    // Climbing idle state update
+    char.animation.timer = 0x20
+    char.animation.frame = 0
+    if (control.player1 & CONTROL_ABC && no_jump_timer == 0)
+    {
+        // Knuckles jumping off the wall
+        char.velocity.y = -0x380
+        char.velocity.x = 0x400
+        char.flags ^= char.flag.FACING_LEFT
+        if (char.flags & char.flag.FACING_LEFT)
+            char.velocity.x = -char.velocity.x
+
+        char.flags |= (char.flag.IN_AIR | char.flag.ROLLING)
+        char.state = char.state.ROLLING
+        char.jumping = 1
+        char.hitbox_extends.x = char.hitbox.x.ROLLING
+        char.hitbox_extends.y = char.hitbox.y.ROLLING
+        char.double_jump_state = 0		// Allow gliding again
+    }
+}
+
+function void Character.updateJumpMoves()
+{
+    if (no_jump_ability_timer > 0)
+    {
+        return
+    }
+    base.Character.updateJumpMoves()
+}

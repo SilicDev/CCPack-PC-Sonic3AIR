@@ -4,6 +4,7 @@
 include EnemySpawn
 include Bumpers
 include fixes
+include character_modification
 
 constant u8 object_size = 0x4A
 
@@ -14,6 +15,12 @@ global bool CrowdControl.prev_paused = false
 
 global u32 invert_directions_timer = 0
 global u32 invert_directions_id = 0
+
+global u32 no_jump_timer = 0
+global u32 no_jump_id = 0
+
+global u32 no_jump_ability_timer = 0
+global u32 no_jump_ability_id = 0
 
 //# pre-update-hook
 function void PreFrameUpdate()
@@ -45,6 +52,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(invert_directions_id, CCStatusCode.PAUSED, "")
         }
+        if (no_jump_timer > 0)
+        {
+            CrowdControl.sendResponse(no_jump_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -52,6 +63,10 @@ function void PreFrameUpdate()
         if (invert_directions_timer > 0)
         {
             CrowdControl.sendResponse(invert_directions_id, CCStatusCode.RESUME, "")
+        }
+        if (no_jump_timer > 0)
+        {
+            CrowdControl.sendResponse(no_jump_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -62,6 +77,14 @@ function void PreFrameUpdate()
             if (invert_directions_timer == 0)
             {
                 CrowdControl.sendResponse(invert_directions_id, CCStatusCode.FINISHED, "")
+            }
+        }
+        if (no_jump_timer > 0)
+        {
+            no_jump_timer--
+            if (no_jump_timer == 0)
+            {
+                CrowdControl.sendResponse(no_jump_id, CCStatusCode.FINISHED, "")
             }
         }
     }
@@ -523,6 +546,33 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
         return
     }
+    if (code == "NoJump")
+    {
+        if (no_jump_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        no_jump_id = id
+        
+        no_jump_timer = duration / 1000 * 60
+        debugLog(no_jump_timer)
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
+    if (code == "NoJumpAbility")
+    {
+        if (no_jump_ability_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        no_jump_ability_id = id
+        
+        no_jump_ability_timer = duration / 1000 * 60
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -531,37 +581,34 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 // return is unused for now, just adding in case we have additional fail conditions
 function bool CrowdControl.SwapToSonic()
 {
-    char.update_address = 0x010a94
+    char.update_address = addressof(Character.BaseUpdate.Sonic)
     u16 sprio = u16[0xFFFFB00A]
     char.base_state = 0x00
     char.sprite_attributes = 0x0680 | (0x8000 & sprio)
     global.characters = CHARS_SONIC_ALONE
     CrowdControl.SnapTails(2)
-    //Character.Initialization.Sonic()
     return true
 }
 
 function bool CrowdControl.SwapToTails()
 {
-    char.update_address = 0x01365c
+    char.update_address = addressof(Character.BaseUpdate.Tails)
     u16 sprio = u16[0xFFFFB00A]
     char.base_state = 0x00
     char.sprite_attributes = 0x06A0 | (0x8000 & sprio)
     global.characters = CHARS_TAILS_ALONE
     CrowdControl.SnapTails(1)
-    //Character.Initialization.Tails()
     return true
 }
 
 function bool CrowdControl.SwapToKnuckles()
 {
-    char.update_address = 0x016444
+    char.update_address = addressof(Character.BaseUpdate.Knuckles)
     u16 sprio = u16[0xFFFFB00A]
     char.base_state = 0x00
     char.sprite_attributes = 0x0680 | (0x8000 & sprio)
     global.characters = CHARS_KNUCKLES_ALONE
     CrowdControl.SnapTails(2)
-    //Character.Initialization.Knuckles()
     return true
 }
 

@@ -70,6 +70,10 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 50, Duration = 20, Description = "Inverts the player's controls." },
                 new("Big Arms", "BigArms")
                     { Price = 200, Description = "Spawns Big Arms to chase the player." },
+                new("Disable Jump", "NoJump")
+                    { Price = 50, Duration = 10, Description = "Disables the player's ability to jump." },
+                new("Disable Jump Abilities", "NoJumpAbility")
+                    { Price = 50, Duration = 20, Description = "Disables the player's jump abilities (Instashield, Flight, Glide)." },
             ];
             return effects;
         }
