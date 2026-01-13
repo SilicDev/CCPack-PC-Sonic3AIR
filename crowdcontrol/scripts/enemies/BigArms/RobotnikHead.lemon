@@ -1,0 +1,102 @@
+// 0x067c58
+function void RobotnikHead.Init()
+{
+    setupObjectAttributesFull(0x06812e)
+    u32[A0 + 0x30] = 0x0681cc
+    
+
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    u8[A0 + 0x0a] |= (u8[A1 + 0x0a] & 0x80)
+}
+
+
+// 0x067c8a
+function void RobotnikHead.Update()
+{
+    Object.AnimationProgressByLocalA1()
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if ((u8[A1 + 0x2a] & 0x80) == 0)
+    {
+        if (u8[A1 + 0x2a] & 0x40)
+            objA0.animation.sprite = 2        // Damage face
+    }
+    else
+    {
+        objA0.base_state = 0x04
+        objA0.animation.sprite = 3        // Defeat face
+    }
+}
+
+
+// 0x067cba
+function void RobotnikHead.Defeated()
+{
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if ((u8[A1 + 0x2a] & 0x80) == 0)
+    {
+        Object.animationProgress(0x0681cc)
+    }
+
+#if STANDALONE
+    // Check if parent object's priority flag changes (triggered in "fn073056")
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if ((u8[A0 + 0x0a] & 0x80) != (u8[A1 + 0x0a] & 0x80))
+    {
+        u8[A0 + 0x0a] = (u8[A0 + 0x0a] & ~0x80) | (u8[A1 + 0x0a] & 0x80)
+        if (global.zone_act == 0x0601 && camera.position.y.u16 == 0x0668)
+        {
+            // Switch sprite again for Robotnik when he goes up to get Big Arms
+            objA0.animation.sprite = 1
+        }
+    }
+#endif
+}
+
+
+// 0x067cd2
+function void RobotnikHead.MainUpdate()
+{
+    MoveAndFlipWithParent()
+    fn085a5a()
+
+    // Targets:
+    //  - 0x067c58    -> objA0.base_state = 0x00  -> Initialization
+    //  - 0x067c8a    -> objA0.base_state = 0x02  -> Regular update
+    //  - 0x067cba    -> objA0.base_state = 0x04  -> Defeated
+    //call tableLookupAddress(0x067d04, objA0.base_state)
+    if (objA0.base_state == 0x00)
+    {
+        RobotnikHead.Init()
+    }
+    else if (objA0.base_state == 0x02)
+    {
+        RobotnikHead.Update()
+    }
+    else if (objA0.base_state == 0x04)
+    {
+        RobotnikHead.Defeated()
+    }
+
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if ((u8[A1 + 0x38] & 0x20) == 0)
+    {
+        DrawObject()
+    }
+    else
+    {
+        UnloadObject()
+    }
+}
+
+function bool RobotnikHead.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
+{
+    if (objA0.update_address == makeCallable(RobotnikHead.MainUpdate))
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("robotnik_head_0x%02x_0x%02x", objA0.subtype2c, objA0.animation.sprite), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    return false
+}

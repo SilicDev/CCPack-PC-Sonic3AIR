@@ -1,6 +1,10 @@
 
 //# script-feature-level(2)
 
+include EnemySpawn
+include Bumpers
+include fixes
+
 constant u8 object_size = 0x4A
 
 global bool blue_spheres_jail = false
@@ -62,26 +66,33 @@ function void PreFrameUpdate()
         }
     }
     CrowdControl.prev_paused = CrowdControl.paused
+    if (!global.game.paused)
+    {
+        if (BigArms.Timer > 0)
+        {
+            BigArms.Timer--
+        }
+    }
 }
 
 function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 duration)
 {
-	// Debug output
-	//debugLog(code)
+    // Debug output
+    //debugLog(code)
     if ((u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT) || global.game.paused)
     {
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
         return
     }
 
-	if (code == "AddRing")
-	{
-		addRings(quantity)
+    if (code == "AddRing")
+    {
+        addRings(quantity)
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
-	}
-	if (code == "TakeRing")
+        return
+    }
+    if (code == "TakeRing")
     {
         if (player.total_rings < quantity)
         {
@@ -92,78 +103,78 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         AddRings()
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
+        return
     }
     if (code == "CharSonic")
     {
-		u32 ABackUp = A0
-		A0 = 0xffffb000
+        u32 ABackUp = A0
+        A0 = 0xffffb000
         CrowdControl.SwapToSonic()
         A0 = ABackUp
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
+        return
     }
     if (code == "CharTails")
     {
-		u32 ABackUp = A0
-		A0 = 0xffffb000
+        u32 ABackUp = A0
+        A0 = 0xffffb000
         CrowdControl.SwapToTails()
         A0 = ABackUp
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
+        return
     }
     if (code == "CharKnuckles")
     {
-		u32 ABackUp = A0
-		A0 = 0xffffb000
+        u32 ABackUp = A0
+        A0 = 0xffffb000
         CrowdControl.SwapToKnuckles()
         A0 = ABackUp
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
+        return
     }
     if (code == "shieldFire")
-	{
-		u32 ABackUp = A1
-		A1 = 0xffffb000
-		ItemEffect.ApplyShieldFire()
-		A1 = ABackUp
+    {
+        u32 ABackUp = A1
+        A1 = 0xffffb000
+        ItemEffect.ApplyShieldFire()
+        A1 = ABackUp
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
-	}
-	if (code == "shieldBubble")
-	{
-		u32 ABackUp = A1
-		A1 = 0xffffb000
-		ItemEffect.ApplyShieldBubble()
-		A1 = ABackUp
+        return
+    }
+    if (code == "shieldBubble")
+    {
+        u32 ABackUp = A1
+        A1 = 0xffffb000
+        ItemEffect.ApplyShieldBubble()
+        A1 = ABackUp
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
-	}
-	if (code == "shieldThunder")
-	{
-		u32 ABackUp = A1
-		A1 = 0xffffb000
-		ItemEffect.ApplyShieldLightning()
-		A1 = ABackUp
+        return
+    }
+    if (code == "shieldThunder")
+    {
+        u32 ABackUp = A1
+        A1 = 0xffffb000
+        ItemEffect.ApplyShieldLightning()
+        A1 = ABackUp
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
-	}
-	if (code == "shieldBlue")
-	{
-		u32 ABackUp = A1
-		A1 = 0xffffb000
-		ItemEffect.applyShield(0, addressof(InstaShield.Init), SFX_CLASSICSHIELD)
-		A1 = ABackUp
+        return
+    }
+    if (code == "shieldBlue")
+    {
+        u32 ABackUp = A1
+        A1 = 0xffffb000
+        ItemEffect.applyShield(0, addressof(InstaShield.Init), SFX_CLASSICSHIELD)
+        A1 = ABackUp
         
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
-		return
-	}
+        return
+    }
     if (code == "Bumper")
     {
         if (allocDynamicObjectStd())
@@ -380,7 +391,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             Character.cancelSuperTransformation()
             CrowdControl.SlapPlayer()
         }
-        if (global.zone != 0x0c)	// No music change in DDZ
+        if (global.zone != 0x0c)    // No music change in DDZ
         {
             chooseFittingMusic()
         }
@@ -496,6 +507,22 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "BigArms")
+    {
+        if (BigArms.Timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Can't spawn second Big Arms")
+            return
+        }
+        if (allocDynamicObjectStd())
+        {
+            objA1.update_address = makeCallable(BigArms.MainUpdate) //0x074262
+            CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+            return
+        }
+        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        return
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -573,6 +600,14 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
     {
         return true
     }
+    if (BigArms.onWriteToSpriteTable(px, py, renderQueue))
+    {
+        return true
+    }
+    if (RobotnikHead.onWriteToSpriteTable(px, py, renderQueue))
+    {
+        return true
+    }
     return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
 }
 
@@ -586,62 +621,58 @@ global bool key4_state = false
 
 function void Debugging.debugDraw()
 {
-	// Call the base implementation (which already uses keys 0 and 1)
-	base.Debugging.debugDraw()
+    // Call the base implementation (which already uses keys 0 and 1)
+    base.Debugging.debugDraw()
 
-	if (Key2)
-	{
-		if (!key2_state)
-		{
-			CrowdControl.triggerEffect(-1, "InvertControls", 1, 10)
-			key2_state = true
-		}
-	}
-	else
-	{
-		key2_state = false
-	}
+    if (Key2)
+    {
+        if (!key2_state)
+        {
+            CrowdControl.triggerEffect(-1, "BigArms", 1, 10)
+            key2_state = true
+        }
+    }
+    else
+    {
+        key2_state = false
+    }
 
-	if (Key3)
-	{
-		if (!key3_state)
-		{
-			CrowdControl.triggerEffect(-1, "Asteron", 1, -1)
-			key3_state = true
-		}
-	}
-	else
-	{
-		key3_state = false
-	}
+    if (Key3)
+    {
+        if (!key3_state)
+        {
+            CrowdControl.triggerEffect(-1, "Asteron", 1, -1)
+            key3_state = true
+        }
+    }
+    else
+    {
+        key3_state = false
+    }
 
-	if (Key4)
-	{
-		if (!key4_state)
-		{
-			CrowdControl.triggerEffect(-1, "Meansteron", 1, -1)
-			key4_state = true
-		}
-	}
-	else
-	{
-		key4_state = false
-	}
+    if (Key4)
+    {
+        if (!key4_state)
+        {
+            CrowdControl.triggerEffect(-1, "Meansteron", 1, -1)
+            key4_state = true
+        }
+    }
+    else
+    {
+        key4_state = false
+    }
 
 
 }
 
 #endif
 
-include EnemySpawn
-include Bumpers
-include fixes
-
 //# address-hook(0x01d566) end(0x01d570)
 function void MonitorIntact.BaseUpdate()
 {
-	if (objA0.flags2e != 0)
-	{
+    if (objA0.flags2e != 0)
+    {
         objA0.position.x.frac = 1 // unused for any object except the player, using it as a flag
     }
     if (objA0.position.x.frac == 1)
@@ -652,13 +683,13 @@ function void MonitorIntact.BaseUpdate()
             UnloadObject()
         }
     }
-	// Targets:
-	//  - 0x01d57e	-> objA0.base_state = 0x00		-> Initialization
-	//  - 0x01d5dc	-> objA0.base_state = 0x02		-> Regular update
-	//  - 0x01d716	-> objA0.base_state = 0x04		-> Gets opened
-	//  - 0x01d61e	-> objA0.base_state = 0x06		-> Animation update
-	//  - 0x01d61a	-> objA0.base_state = 0x08		-> Simply calls "DrawOrUnloadObject"
-	call tableLookupAddress(0x01d574, objA0.base_state)
+    // Targets:
+    //  - 0x01d57e    -> objA0.base_state = 0x00        -> Initialization
+    //  - 0x01d5dc    -> objA0.base_state = 0x02        -> Regular update
+    //  - 0x01d716    -> objA0.base_state = 0x04        -> Gets opened
+    //  - 0x01d61e    -> objA0.base_state = 0x06        -> Animation update
+    //  - 0x01d61a    -> objA0.base_state = 0x08        -> Simply calls "DrawOrUnloadObject"
+    call tableLookupAddress(0x01d574, objA0.base_state)
 }
 
 //# address-hook(0x022ef4) end(0x022f40)
@@ -701,30 +732,30 @@ function void SpringHorizontal.Update()
 //# address-hook(0x0010de) end(0x001118)
 function void UpdateControllers()
 {
-	#if STANDALONE
-	{
-		// The following would be the correct implementation for Oxygen,
-		// but we don't do that here and rather in "waitForNextFrame" to ensure that controllers get updated each frame
-	/*
-		control.pad1.state = Input.getController(0)
-		control.pad1.pressed = control.pad1.state & ~Input.getControllerPrevious(0)
-		control.pad2.state = Input.getController(1)
-		control.pad2.pressed = control.pad2.state & ~Input.getControllerPrevious(1)
-	*/
-	}
-	#else
-	{
-		A0 = 0xfffff604		// Address of "control.pad1"
-		A1 = 0xa10003		// Hardware address for physical controller port 1
+    #if STANDALONE
+    {
+        // The following would be the correct implementation for Oxygen,
+        // but we don't do that here and rather in "waitForNextFrame" to ensure that controllers get updated each frame
+    /*
+        control.pad1.state = Input.getController(0)
+        control.pad1.pressed = control.pad1.state & ~Input.getControllerPrevious(0)
+        control.pad2.state = Input.getController(1)
+        control.pad2.pressed = control.pad2.state & ~Input.getControllerPrevious(1)
+    */
+    }
+    #else
+    {
+        A0 = 0xfffff604        // Address of "control.pad1"
+        A1 = 0xa10003        // Hardware address for physical controller port 1
 
-		for (u8 i = 0; i < 2; ++i)
-		{
-			// Two loops, one for each controller port
-			u8[A1] = 0
-			D0.u8 = (u8[A1] << 2) & (CONTROL_A | CONTROL_START)
+        for (u8 i = 0; i < 2; ++i)
+        {
+            // Two loops, one for each controller port
+            u8[A1] = 0
+            D0.u8 = (u8[A1] << 2) & (CONTROL_A | CONTROL_START)
 
-			u8[A1] = 0x40
-			D1.u8 = u8[A1] & (CONTROL_B | CONTROL_C)
+            u8[A1] = 0x40
+            D1.u8 = u8[A1] & (CONTROL_B | CONTROL_C)
             if (invert_directions_timer > 0 && !CrowdControl.paused)
             {
                 u8 temp = 0
@@ -750,17 +781,29 @@ function void UpdateControllers()
                 D1.u8 |= u8[A1] & CONTROL_DPAD
             }
 
-			D0.u8 = (D0.u8 | D1.u8) ^ 0xff		// Currently pressed buttons
-			D1.u8 = u8[A0] ^ D0.u8				// Clearing buttons pressed in previous storage
+            D0.u8 = (D0.u8 | D1.u8) ^ 0xff        // Currently pressed buttons
+            D1.u8 = u8[A0] ^ D0.u8                // Clearing buttons pressed in previous storage
 
-			u8[A0] = D0.u8					// Set button held states
-			u8[A0+1] = D1.u8 & D0.u8		// Set button pressed states
+            u8[A0] = D0.u8                    // Set button held states
+            u8[A0+1] = D1.u8 & D0.u8        // Set button pressed states
 
-			A0 += 2		// To next input storage address
-			A1 += 2		// To next controller port address
-		}
-	}
-	#endif
+            A0 += 2        // To next input storage address
+            A1 += 2        // To next controller port address
+        }
+    }
+    #endif
+}
+
+function void Standalone.onLevelStart() 
+{
+    BigArms.Timer = 0
+    base.Standalone.onLevelStart()
+}
+
+function void Standalone.onRestartAtCheckpoint() 
+{
+    BigArms.Timer = 0
+    base.Standalone.onRestartAtCheckpoint()
 }
 
 function void waitForNextFrame()
@@ -853,12 +896,12 @@ function void CrowdControl.SlapPlayer()
 
 function u32 seekObjectTableFor(u32 update_address)
 {
-    return seekObjectTableFor(update_address, 3, 108)
+    return seekObjectTableFor(update_address, 3, 110)
 }
 
 function u32 seekObjectTableFor(u32 update_address, u8 min)
 {
-    return seekObjectTableFor(update_address, min, 108)
+    return seekObjectTableFor(update_address, min, 110)
 }
 
 function u32 seekObjectTableFor(u32 update_address, u8 min, u8 max)
@@ -871,4 +914,21 @@ function u32 seekObjectTableFor(u32 update_address, u8 min, u8 max)
         }
     }
     return 0
+}
+
+function void unloadChildrenAt(u32 update_address, bool recursive)
+{
+    for (u8 i = 3; i < 110; i++)
+    {
+        u32 addr = 0xFFFFB000 + (object_size * i)
+        u32 parent = 0xFFFF0000 + u16[addr + 0x46]
+        if (parent == update_address)
+        {
+            if (recursive)
+            {
+                unloadChildrenAt(addr, true)
+            }
+            unloadObjectAt(addr)
+        }
+    }
 }

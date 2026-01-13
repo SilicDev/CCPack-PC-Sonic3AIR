@@ -1,0 +1,83 @@
+{
+    "robotnik_head_0x00_0x00": {
+        "File": "robotnik_head.png",
+        "Rect": "0,0,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x00_0x01": {
+        "File": "robotnik_head.png",
+        "Rect": "46,0,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x00_0x02": {
+        "File": "robotnik_head.png",
+        "Rect": "92,0,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x00_0x03": {
+        "File": "robotnik_head.png",
+        "Rect": "138,0,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x01_0x00": {
+        "File": "robotnik_head.png",
+        "Rect": "0,26,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x01_0x01": {
+        "File": "robotnik_head.png",
+        "Rect": "46,26,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x01_0x02": {
+        "File": "robotnik_head.png",
+        "Rect": "92,26,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x01_0x03": {
+        "File": "robotnik_head.png",
+        "Rect": "138,26,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x02_0x00": {
+        "File": "robotnik_head.png",
+        "Rect": "0,52,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x02_0x01": {
+        "File": "robotnik_head.png",
+        "Rect": "46,52,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x02_0x02": {
+        "File": "robotnik_head.png",
+        "Rect": "92,52,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x02_0x03": {
+        "File": "robotnik_head.png",
+        "Rect": "138,52,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x03_0x00": {
+        "File": "robotnik_head.png",
+        "Rect": "0,78,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x03_0x01": {
+        "File": "robotnik_head.png",
+        "Rect": "46,78,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x03_0x02": {
+        "File": "robotnik_head.png",
+        "Rect": "92,78,44,24",
+        "Center": "27,9"
+    },
+    "robotnik_head_0x03_0x03": {
+        "File": "robotnik_head.png",
+        "Rect": "138,78,44,24",
+        "Center": "27,9"
+    }
+}
+}
