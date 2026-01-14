@@ -1,0 +1,1064 @@
+global u32 BigArms.Timer = 0
+
+// 0x074262
+function void BigArms.MainUpdate()
+{
+    //  - objA0.base_state = 0x00  -> Initialization
+    //  - objA0.base_state = 0x02  -> Short wait time
+    //  - objA0.base_state = 0x06  -> Falling down once in background
+    //  - objA0.base_state = 0x08  -> Short wait time (same as 0x02)
+    //  - objA0.base_state = 0x0a  -> Main attack from left or right
+    //  - objA0.base_state = 0x0c  -> Moving back and forth at the top of the screen
+    //  - objA0.base_state = 0x0e  -> Waiting before going down
+    //  - objA0.base_state = 0x10  -> Going down
+    //  - objA0.base_state = 0x12  -> Swinging up at the bottom of the screen
+    //  - objA0.base_state = 0x14  -> Swinging down the bottom of the screen
+    //  - objA0.base_state = 0x16  -> Waiting briefly there
+    //  - objA0.base_state = 0x18  -> Moving back and forth at the bottom of the screen
+    //  - objA0.base_state = 0x1a  -> Waiting briefly, again
+    //  - objA0.base_state = 0x1c  -> Moving diagonally up, out of the screen
+    //  - objA0.base_state = 0x1e  -> Caught the player
+    //  - objA0.base_state = 0x20  -> Moving diagonally up with the player, out of the screen
+    //  - objA0.base_state = 0x22  -> Short wait time
+    //  - objA0.base_state = 0x24  -> Ramming onto the ground
+    //  - objA0.base_state = 0x26  -> Hit the ground (part 1)
+    //  - objA0.base_state = 0x28  -> Hit the ground (part 2)
+    //  - objA0.base_state = 0x2a  -> Letting go, and moving away diagonally
+    if (objA0.base_state == 0x00)
+    {
+        BigArms.Init()
+    }
+    else if (objA0.base_state == 0x02)
+    {
+        Object.CountdownAndTrigger() // 0x07430e
+    }
+    else if (objA0.base_state == 0x06)
+    {
+        BigArms.BackgroundFall()
+    }
+    else if (objA0.base_state == 0x08)
+    {
+        Object.CountdownAndTrigger() // 0x07430e
+    }
+    else if (objA0.base_state == 0x0a)
+    {
+        BigArms.MoveIdle()
+    }
+    else if (objA0.base_state == 0x0c)
+    {
+        BigArms.MoveTop()
+    }
+    else if (objA0.base_state == 0x0e)
+    {
+        Object.CountdownAndTrigger() // 0x074442
+    }
+    else if (objA0.base_state == 0x10)
+    {
+        BigArms.GoDown()
+    }
+    else if (objA0.base_state == 0x12)
+    {
+        BigArms.SwingUp()
+    }
+    else if (objA0.base_state == 0x14)
+    {
+        BigArms.SwingDown()
+    }
+    else if (objA0.base_state == 0x16)
+    {
+        Object.CountdownAndTrigger() // 0x0744e4
+    }
+    else if (objA0.base_state == 0x18)
+    {
+        BigArms.MoveBottom()
+    }
+    else if (objA0.base_state == 0x1a)
+    {
+        Object.CountdownAndTrigger() // 0x074528
+    }
+    else if (objA0.base_state == 0x1c)
+    {
+        BigArms.Rise()
+    }
+    else if (objA0.base_state == 0x1e)
+    {
+        Object.CountdownAndTrigger() // 0x07455c
+    }
+    else if (objA0.base_state == 0x20)
+    {
+        BigArms.SlamRise()
+    }
+    else if (objA0.base_state == 0x22)
+    {
+        Object.CountdownAndTrigger() // 0x0745a2
+    }
+    else if (objA0.base_state == 0x24)
+    {
+        BigArms.Dunk()
+    }
+    else if (objA0.base_state == 0x26)
+    {
+        BigArms.HitGround()
+    }
+    else if (objA0.base_state == 0x28)
+    {
+        Object.CountdownAndTrigger() // 0x07463a
+    }
+    else if (objA0.base_state == 0x2a)
+    {
+        BigArms.SlamEscape()
+    }
+    
+    if (BigArms.Timer == 0 && objA0.base_state < 0x1e)
+    {
+        // unload all children
+        unloadChildrenAt(A0, true)
+        UnloadObject()
+        return
+    }
+    BigArms.CheckDead()
+    Enemy.DrawDynamicObject()
+}
+
+// 0x0742a8
+function void BigArms.Init()
+{
+    setupObjectAttributesFull(0x0750b6)
+
+    boss.remaining_hits = 0xff
+    objA0.flags38 |= 0x08
+    global.passing_floor = 0xff
+    objA0.position.x.u16 = camera.position.x.u16 + getScreenWidth() - 160
+    objA0.position.y.u16 = camera.position.y.u16 - 0x50
+    objA0.countdown_value = 0x59
+    objA0.countdown_callback = makeCallable(BigArms.SpawnParts)
+    BigArms.Timer = 30 * 60
+
+    //loadPaletteLine1(0x0751aa)
+
+    //Kosinski.addToDMAQueue(0x376874, 0x7b20)        // Big Arm sprites
+
+    // "spawnChildObjects(0x068184)" replaced by:
+    //spawnChildObject(0x067cd2, 0x00, 0, -28)        // Robotnik head
+    u8 head_type = 0xFF
+    while (head_type > 0x03)
+    {
+        head_type = System.rand() & 0x03
+    }
+    spawnChildObject(makeCallable(RobotnikHead.MainUpdate), head_type, 0, -28)        // Robotnik head
+}
+
+// 0x074314
+function void BigArms.SpawnParts()
+{
+    objA0.base_state = 0x06
+    objA0.animation.sprite = 8
+
+    // "spawnChildObjects(0x075122)" replaced by:
+    //spawnChildObject(0x0749d0, 0x00, 20, 36) // Arms
+    spawnChildObject(makeCallable(BigArms.Arm.MainUpdate), 0x00, 20, 36) // Arms
+    //spawnChildObject(0x0749ae, 0x02, 12, -20) // Body
+    spawnChildObject(makeCallable(BigArms.Body.Init), 0x02, 12, -20) // Body
+    //spawnChildObject(0x074b9e, 0x04, 0, -24) // Back of seat?
+    spawnChildObject(makeCallable(BigArms.Back.Init), 0x04, 0, -24) // Back of seat?
+    //spawnChildObject(0x074bc0, 0x06, 56, -20) // Thruster
+    spawnChildObject(makeCallable(BigArms.Thruster.Init), 0x06, 56, -20) // Thruster
+}
+
+// 0x07432a
+function void BigArms.BackgroundFall()
+{
+    MoveWithGravity20()
+    D0.u16 = camera.position.y.u16 + 0x0120
+    if (D0.u16 >= objA0.position.y.u16)
+        return
+
+    u8[A0 + 0x0a] |= 0x80
+    objA0.velocity.y = 0
+    objA0.collision_attributes = collision.size.24x24
+    objA0.render_flags ^= render_flag.FLIP_X
+
+    // "spawnChildObjects(0x07513c)" replaced by:
+    spawnChildObject(0x074c00, 0x00, 4, -52) // invisible object?
+
+    BigArms.WaitOffscreenAttack()
+}
+
+// 0x074360
+function void BigArms.WaitOffscreenAttack()
+{
+    objA0.base_state = 0x08
+    objA0.countdown_value = 0x7f        // Wait time outside of the screen
+    objA0.countdown_callback = makeCallable(BigArms.StartAttack)
+}
+
+// 0x074376
+function void BigArms.StartAttack()
+{
+    objA0.render_flags ^= render_flag.FLIP_X
+    D0.u8 = objA0.value39
+    ++objA0.value39
+
+    bool isKnucklesFight = (camera.position.y.u16 < 0x0500)
+    bool useNormalAttack = isKnucklesFight ? ((D0 & 0x04) == 0) : ((D0 & 0x02) == 0)
+    if (useNormalAttack)
+    {
+        // Normal attack
+        objA0.base_state = 0x0a
+        objA0.flags38 &= ~0x08
+        objA0.flags38 &= ~0x04
+        objA0.countdown_value = 0xaf + getScreenExtend()
+        objA0.countdown_callback = makeCallable(BigArms.WaitOffscreenAttack)
+        BigArms.StartMoveNormalAttack()
+    }
+    else
+    {
+        // Move at the top, then at the bottom
+        objA0.base_state = 0x0c
+        objA0.value39 = 0
+        objA0.velocity.y = 0
+        objA0.countdown_callback = makeCallable(BigArms.WaitGoDown)
+        objA0.position.y.u16 = camera.position.y.u16
+        BigArms.StartMoveBottom()
+    }
+}
+
+// 0x0743ce
+function void BigArms.MoveIdle()
+{
+    //  s16[A0 + 0x3a] = 0x00  -> Moving sideways, straight
+    //  s16[A0 + 0x3a] = 0x02  -> Moving sideways and down, accelerating up
+    //  s16[A0 + 0x3a] = 0x04  -> Moving sideways and up, accelerating down
+    //  s16[A0 + 0x3a] = 0x06  -> Moving sideways, straight
+    //  s16[A0 + 0x3a] = 0x08
+    if (s16[A0 + 0x3a] == 0x00 || s16[A0 + 0x3a] == 0x06)
+    {
+        // 0x0743f4 // Do nothing
+    }
+    else if (s16[A0 + 0x3a] == 0x02)
+    {
+        objA0.velocity.y -= 4 // 0x0743f0
+    }
+    else if (s16[A0 + 0x3a] == 0x04)
+    {
+        // 0x0743f6
+        objA0.velocity.y += u16[A0 + 0x3c]
+        if (objA0.velocity.y == 0)
+        {
+            u16[A0 + 0x3c] = 2
+        }
+    }
+    else if (s16[A0 + 0x3a] == 0x08)
+    {
+        objA0.position.y.u16 -= 4 // 0x07440c
+    }
+
+    UpdateMovementStraightSimple()
+    Object.CountdownAndTrigger()
+}
+
+// 0x074412
+function void BigArms.MoveTop()
+{
+    D1 = 0x50
+    D2.u16 = getScreenWidth() - 0x50
+    BigArms.FlipAtScreenBorder()
+
+    UpdateMovementStraightSimple()
+    Object.CountdownAndTrigger()
+}
+
+// 0x074428
+function void BigArms.WaitGoDown()
+{
+    objA0.base_state = 0x0e
+    objA0.velocity.x = 0
+    objA0.countdown_value = 0x1f
+    objA0.countdown_callback = makeCallable(BigArms.StartGoDown)
+}
+
+// 0x074448
+function void BigArms.StartGoDown()
+{
+    objA0.base_state = 0x10
+    objA0.flags38 |= 0x08
+}
+
+// 0x074456
+function void BigArms.GoDown()
+{
+    MoveWithGravity20()
+    D0.u16 = camera.foreground.y.u16 + 0xc0
+    if (D0.u16 < objA0.position.y.u16)
+    {
+        objA0.base_state = 0x12
+        objA0.flags38 |= 0x04
+    }
+}
+
+// 0x07447a
+function void BigArms.SwingUp()
+{
+    objA0.velocity.y -= 0x80
+    UpdateMovementStraightSimple()
+    if (objA0.velocity.y < 0)
+    {
+        if (objA0.position.y.u16 <= camera.foreground.y.u16 + getScreenHeight())
+        {
+            objA0.base_state = 0x14
+        }
+    }
+}
+
+// 0x0744a4
+function void BigArms.SwingDown()
+{
+    objA0.velocity.y += 0x40
+    UpdateMovementStraightSimple()
+    if (objA0.velocity.y >= 0)
+    {
+        D0.u16 = camera.foreground.y.u16 + 0xd0
+        if (D0.u16 <= objA0.position.y.u16)
+        {
+            objA0.base_state = 0x16
+            objA0.position.y.u16 = D0.u16
+            objA0.velocity.y = 0
+            objA0.countdown_value = 0x1f
+            objA0.countdown_callback = makeCallable(BigArms.WaitBottom)
+        }
+    }
+}
+
+// 0x0744ea
+function void BigArms.WaitBottom()
+{
+    objA0.base_state = 0x18
+    objA0.countdown_callback = makeCallable(BigArms.WaitRise)
+    BigArms.StartMoveBottom()
+}
+
+// 0x0744fc
+function void BigArms.MoveBottom()
+{
+    D1 = 0x30
+    D2 = getScreenWidth() - 0x30
+    BigArms.FlipAtScreenBorder()
+
+    UpdateMovementStraightSimple()
+    Object.CountdownAndTrigger()
+}
+
+// 0x074512
+function void BigArms.WaitRise()
+{
+    objA0.base_state = 0x1a
+    objA0.countdown_value = 0x1f
+    objA0.countdown_callback = makeCallable(BigArms.StartRise)
+}
+
+// 0x07452e
+function void BigArms.StartRise()
+{
+    objA0.base_state = 0x1c
+    objA0.velocity.y = -0x400
+    objA0.flags38 &= ~0x08
+}
+
+// 0x074542
+function void BigArms.Rise()
+{
+    UpdateMovementStraightSimple()
+    D0.u16 = camera.position.y.u16 - 0x60
+    if (D0.u16 >= objA0.position.y.u16)
+    {
+        BigArms.WaitOffscreenAttack()
+    }
+}
+
+// 0x074562
+function void BigArms.StartSlamRise()
+{
+    objA0.base_state = 0x20
+    objA0.velocity.y = -0x400
+    objA0.value39 ^= 0x02
+}
+
+// 0x074576
+function void BigArms.SlamRise()
+{
+    UpdateMovementStraightSimple()
+    D0.u16 = camera.position.y.u16 - 0x60
+    if (D0.u16 < objA0.position.y.u16)
+        return
+
+    objA0.base_state = 0x22
+    objA0.countdown_value = 0x3f
+    objA0.countdown_callback = makeCallable(BigArms.StartDunk)
+}
+
+// 0x0745a8
+function void BigArms.StartDunk()
+{
+    objA0.base_state = 0x24
+    A1 = 0xffff0000 + u16[A0 + 0x44]
+    u8[A1 + 0x3c] = 0
+
+    D0.u16 = camera.position.x.u16 + getScreenWidth() / 2
+    if (objA0.position.x.u16 <= D0.u16)
+    {
+        objA0.render_flags |= render_flag.FLIP_X
+        D2.u16 = 0x60
+    }
+    else
+    {
+        objA0.render_flags &= ~render_flag.FLIP_X
+        D2.u16 = getScreenWidth() - 0x60
+    }
+    objA0.position.x.u16 = camera.position.x.u16 + D2.u16
+}
+
+// 0x0745e2
+function void BigArms.Dunk()
+{
+    if (objA0.position.y.u16 < camera.foreground.y.u16 + 0x88)
+    {
+        objA0.position.y.u16 += 8
+        return
+    }
+
+    objA0.base_state = 0x26
+    objA0.flags38 |= 0x02
+    camera.screenshake.state = 0x14
+    objA0.countdown_value = 0x03
+
+    playSound(0x61)
+}
+
+// 0x074618
+function void BigArms.HitGround()
+{
+    objA0.position.y.u16 += 4
+    --objA0.countdown_value
+    if (objA0.countdown_value >= 0)
+        return
+
+    objA0.base_state = 0x28
+    objA0.countdown_value = 0x07
+    objA0.countdown_callback = makeCallable(BigArms.HurtPlayer)
+}
+
+// 0x074640
+function void BigArms.HurtPlayer()
+{
+    objA0.base_state = 0x2a
+    u8[A0 + 0x30] = 0
+    objA0.position.y.u16 -= 0x10
+    objA0.flags38 &= ~0x02
+
+    objA0.velocity.x = (objA0.render_flags & render_flag.FLIP_X) ? -0x400 : 0x400
+    objA0.velocity.y = -0x600
+    objA0.countdown_value = 0x3f
+
+    /*if (u8[0xffffb000 + 0x2b] & char.bonus.INVINCIBLE)
+    {
+        // Handling primarily for Super forms
+        A1 = 0xffffb000
+        u8[A1 + 0x05] = base_state.NORMAL
+        objA1.velocity.x = -objA0.velocity.x
+        objA1.velocity.y = -0x400
+        objA1.state = char.state.ROLLING
+        objA1.flags2a |= char.flag.IN_AIR
+        objA1.flags2a &= ~char.flag.ON_OBJECT
+        u8[A1 + 0x2e] = 0
+        u8[A1 + 0x3d] = 0
+        u8[A1 + 0x40] = 0
+
+        playSound(SFX_SPRING)
+    }
+    else
+    {
+        A2 = A0
+        A0 = 0xffffb000
+        Character.GettingHurt()
+        A0 = A2
+    }*/
+    A2 = A0
+    A0 = 0xffffb000
+    Character.Die_noSound()
+    A0 = A2
+}
+
+// 0x0746c8
+function void BigArms.SlamEscape()
+{
+    UpdateMovementSimple()
+    --objA0.countdown_value
+    if (objA0.countdown_value < 0)
+    {
+        BigArms.WaitOffscreenAttack()
+    }
+}
+
+// 0x0749d0
+function void BigArms.Arm.MainUpdate()
+{
+    // Targets:
+    //  - 0x0749ec    -> objA0.base_state = 0x00
+    //  - 0x074a14    -> objA0.base_state = 0x02
+    //  - 0x074a3e    -> objA0.base_state = 0x04
+    //call tableLookupAddress(0x0749e6, objA0.base_state)
+    if (objA0.base_state == 0x00)
+    {
+        BigArms.Arm.Init()
+    }
+    else if (objA0.base_state == 0x02)
+    {
+        BigArms.Arm.WaitParentActive()
+    }
+    else if (objA0.base_state == 0x04)
+    {
+        BigArms.Arm.Update()
+    }
+    
+
+    D0 = 0x0c
+    fn084a04()
+}
+
+
+// 0x0749ec
+function void BigArms.Arm.Init()
+{
+    setupObjectAttributesFull(0x0750ce)
+
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    u16[A1 + 0x44] = A0.u16
+    u8[A0 + 0x42] = 0x14
+    u8[A0 + 0x43] = 0xfa
+
+    // "spawnChildObjects(0x075144)" replaced by:
+    //spawnChildObject(0x074afa, 0x00, -42, -2) // Hand front
+    spawnChildObject(makeCallable(BigArms.Hands.Init), 0x00, -42, -2) // Hand front
+    //spawnChildObject(0x074afa, 0x02, -74, -2) // Hand back
+    spawnChildObject(makeCallable(BigArms.Hands.Init), 0x02, -74, -2) // Hand back
+    //spawnChildObject(0x074a9a, 0x04, 0, 0) // Elbow?
+    spawnChildObject(makeCallable(BigArms.Elbow.Init), 0x04, 0, 0) // Elbow?
+    spawnChildObject(0x074c24, 0x06, -64, -2) // grab hitbox
+}
+
+
+// 0x0749ae
+function void BigArms.Body.Init()
+{
+    setupObjectAttributesFull(0x0750c2)
+
+    objA0.update_address = makeCallable(BigArms.Body.WaitParentActive)
+    BigArms.Body.WaitParentActive()
+}
+
+
+// 0x0749be
+function void BigArms.Body.WaitParentActive()
+{
+    BigArms.PartsShared.CheckParentActive(makeCallable(BigArms.Body.Update))
+    BigArms.Body.Update()
+}
+
+
+// 0x0749c4
+function void BigArms.Body.Update()
+{
+    MoveAndFlipWithParent()
+    fn08498c() // UnloadOrDraw if Parent alive
+}
+
+
+// 0x074a14 
+function void BigArms.Arm.WaitParentActive()
+{
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if (u8[A1 + 0x0a] & 0x80)
+    {
+        u8[A0 + 0x0a] |= 0x80
+        objA0.base_state = 0x04
+        objA0.collision_attributes = (collision.flag.THREAT | collision.size.32x16)
+    }
+
+    A2 = 0x360b08
+    fn084d78()
+}
+
+
+// 0x074a3e
+function void BigArms.Arm.Update()
+{
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if (u8[A1 + 0x38] & 0x02)
+        return
+
+    if ((u8[A1 + 0x38] & 0x04) == 0)
+    {
+        A1 = 0xffffb000
+        D0.u8 = u8[A0 + 0x3c]
+        D1.s16 = objA0.position.y.u16 - objA1.position.y.u16
+        if (D1.s16 < -2)
+        {
+            ++D0.u8
+            if (D0.s8 <= 0)
+            {
+                u8[A0 + 0x3c] = D0.u8
+            }
+        }
+        else if (D1.s16 > 2)
+        {
+            --D0.u8
+            if (D0.s8 >= -0x30)
+            {
+                u8[A0 + 0x3c] = D0.u8
+            }
+        }
+    }
+
+    fn084b82()
+    A2 = 0x360b08
+    fn084d78()
+}
+
+// 0x074a9a
+function void BigArms.Elbow.Init()
+{
+    setupObjectAttributesBasic(0x0750e0)
+    objA0.update_address = makeCallable(BigArms.Elbow.WaitParentActive)
+
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    A2 = 0xffff0000 + u16[A1 + 0x46]
+    u16[A0 + 0x46] = A2.u16
+    u16[A0 + 0x44] = A1.u16
+    u16[A0 + 0x44] = A1.u16
+    u8[A0 + 0x42] = 0x18
+    u8[A0 + 0x43] = 0xfa
+
+    BigArms.Elbow.WaitParentActive()
+}
+
+
+// 0x074aca
+function void BigArms.Elbow.WaitParentActive()
+{
+    BigArms.PartsShared.CheckParentActive(makeCallable(BigArms.Elbow.Update))
+    BigArms.Elbow.Update()
+}
+
+
+// 0x074ad0
+function void BigArms.Elbow.Update()
+{
+    fn084b82()
+
+    A1 = 0xffff0000 + u16[A0 + 0x44]
+    D0.u8 = u8[A1 + 0x3c] + 0x14
+    u8[A0 + 0x3c] = D0.u8
+
+    A2 = 0x3629a0
+    fn084d78()
+
+    D0 = 0x0c
+    fn084a04()
+}
+
+// 0x074afa
+function void BigArms.Hands.Init()
+{
+    setupObjectAttributesBasic(0x0750da)
+
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    u16[A0 + 0x44] = u16[A1 + 0x46]
+    objA0.update_address = makeCallable(BigArms.Hands.WaitParentActive)
+    if (objA0.subtype2c == 0)
+    {
+        u32[A0 + 0x30] = 0x075194
+    }
+    else
+    {
+        objA0.animation.sprite = 0x08
+        objA0.sprite_priority = 0x0180
+        u32[A0 + 0x30] = 0x07519c
+    }
+
+    BigArms.Hands.WaitParentActive()
+}
+
+
+// 0x074b36
+function void BigArms.Hands.WaitParentActive()
+{
+    BigArms.PartsShared.CheckParentActive(makeCallable(BigArms.Hands.Update))
+    BigArms.Hands.Update()
+}
+
+
+// 0x074b3c 
+function void BigArms.Hands.Update()
+{
+    MoveAndFlipWithParent()
+    Object.AnimationProgressByLocalA1()
+
+    A1 = 0xffff0000 + u16[A0 + 0x44]
+    if (u8[A1 + 0x30] != 0)
+    {
+        objA0.update_address = makeCallable(BigArms.Hands.UpdateGrapped)
+        objA0.animation.sprite = 7
+        if (objA0.subtype2c != 0)
+        {
+            objA0.animation.sprite = 11
+            u8[A0 + 0x42] += 8
+        }
+    }
+
+    D0 = 0x0c
+    fn084a04()
+}
+
+
+// 0x074b76
+function void BigArms.Hands.UpdateGrapped()
+{
+    MoveAndFlipWithParent()
+    A1 = 0xffff0000 + u16[A0 + 0x44]
+    if (u8[A1 + 0x30] == 0)
+    {
+        objA0.update_address = makeCallable(BigArms.Hands.Update)
+        if (objA0.subtype2c != 0)
+        {
+            u8[A0 + 0x42] -= 8
+        }
+    }
+
+    D0 = 0x0c
+    fn084a04()
+}
+
+
+// 0x074b9e
+function void BigArms.Back.Init()
+{
+    setupObjectAttributesFull(0x0750e6)
+    objA0.update_address = makeCallable(BigArms.Back.WaitParentActive)
+    BigArms.Back.WaitParentActive()
+}
+
+
+// 0x074bae
+function void BigArms.Back.WaitParentActive()
+{
+    BigArms.PartsShared.CheckParentActive(makeCallable(BigArms.Back.Update))
+    BigArms.Back.Update()
+}
+
+
+// 0x074bb4
+function void BigArms.Back.Update()
+{
+    MoveAndFlipWithParent()
+    fn08498c()
+}
+
+// 0x074bc0 
+function void BigArms.Thruster.Init()
+{
+    setupObjectAttributesFull(0x0750f2)
+
+    objA0.update_address = makeCallable(BigArms.Thruster.WaitParentActive)
+    BigArms.Thruster.WaitParentActive()
+}
+
+
+// 0x074bd0
+function void BigArms.Thruster.WaitParentActive()
+{
+    D0.u8 = (collision.flag.THREAT | collision.size.12x12)
+    BigArms.PartsShared.CheckParentActiveUpdateCollision(makeCallable(BigArms.Thruster.Update))
+    BigArms.Thruster.Update()
+}
+
+
+// 0x074bd8
+function void BigArms.Thruster.Update()
+{
+    MoveAndFlipWithParent()
+
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if ((u8[A1 + 0x2a] & 0x80) == 0)
+    {
+        if ((global.framecounter & 0x01) == 0)
+        {
+            DrawObject()
+        }
+    }
+    else
+    {
+        UnloadObject()
+    }
+}
+
+
+// 0x074ebc
+function void BigArms.PartsShared.CheckParentActiveUpdateCollision(u32 returnAddress)
+{
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if (u8[A1 + 0x0a] & 0x80)
+    {
+        u8[A0 + 0x0a] |= 0x80
+        objA0.collision_attributes = D0.u8
+
+        // Originally this is "objA0.update_address = u32[A7]"
+        //  -> But this wouldn't work in script, as the system stack is not used the same way
+        //  -> So the value has to be given explicitly
+        objA0.update_address = returnAddress
+    }
+}
+
+
+// 0x074f24
+function void BigArms.StartMoveNormalAttack()
+{
+    GetRandomNumber()
+    D0.u16 &= 0x06
+    u16[A0 + 0x3a] = D0.u16
+    D2.s16 = (objA0.render_flags & render_flag.FLIP_X) ? -0x68 : getScreenWidth() + 0x68
+
+    objA0.position.x.u16 = camera.position.x.u16 + D2.s16
+    objA0.position.y.u16 = camera.position.y.u16 + u16[0x074f72 + D0.u16]
+    objA0.velocity.x = (objA0.render_flags & render_flag.FLIP_X) ? 0x300 : -0x300
+    objA0.velocity.y = u16[0x074f7a + D0.u16]
+    u16[A0 + 0x3c] = 0x08
+}
+
+// 0x074f82
+function void BigArms.StartMoveBottom()
+{
+    objA0.velocity.x = (objA0.render_flags & render_flag.FLIP_X) ? 0x300 : -0x300
+    GetRandomNumber()
+    D0.u16 &= 0x7f
+    D0.u16 += 0xc0
+    objA0.countdown_value = D0.u16
+}
+
+// 0x074fa8
+function void BigArms.FlipAtScreenBorder()
+{
+    D0.u16 = camera.position.x.u16
+    if (objA0.velocity.x >= 0)
+    {
+        D0.u16 += D2.u16
+        if (D0.u16 <= objA0.position.x.u16)
+        {
+            objA0.render_flags ^= render_flag.FLIP_X
+            objA0.velocity.x = -objA0.velocity.x
+        }
+    }
+    else
+    {
+        D0.u16 += D1.u16
+        if (D0.u16 >= objA0.position.x.u16)
+        {
+            objA0.render_flags ^= render_flag.FLIP_X
+            objA0.velocity.x = -objA0.velocity.x
+        }
+    }
+}
+
+// 0x074fd2
+function void BigArms.CheckDead()
+{
+    if (objA0.base_state < 0x08 || u8[A0 + 0x28] > 0)
+        return
+
+    D0.u8 = boss.remaining_hits
+    if (D0.u8 == 0)
+    {
+        objA0.update_address = 0x085668
+        objA0.countdown_callback = 0x0746d8
+        AddScoreForBossEnemy()
+
+        // "spawnSimpleChildObjects(0x083fee)" replaced by:
+        spawnSimpleChildObjects(0x083d84, 1)        // Boss explosion generator
+        if (_equal())
+        {
+            u8[A1 + 0x2c] = 0x04
+        }
+
+    #if !STANDALONE
+        // This resets the character state, but is unnecessary, #contributed by TheMushrunt
+        if (u8[A0 + 0x30] == 0)
+        {
+            stopCharacterWinPose(0xffffb000)
+        }
+
+        // This object looks broken and is unnecessary, so leave it out in S3AIR, fix #contributed by Legobouwer
+        // "spawnChildObjects(0x075186)" replaced by:
+        spawnChildObject(0x074e12, 0x00, 0, 16)
+    #else
+        // Release main character if he was grabbed (can happen if second character makes the final hit)
+        if (u8[0xffffb000 + 0x2e] & (control_flag.DISABLE_INTERACTION | control_flag.DISABLE_UPDATE))
+            u8[0xffffb000 + 0x2e] &= ~(control_flag.DISABLE_INTERACTION | control_flag.DISABLE_UPDATE)
+
+        bool isKnucklesFight = (camera.position.y.u16 < 0x0500)
+        if (!isKnucklesFight)
+        {
+            // Change in standalone: No music fade-out to (very brief) level music before level results
+            objA0.update_address = 0x08566a
+        }
+    #endif
+        return
+    }
+
+    if (objA0.state == 0)
+    {
+        if (objA0.base_state == 0x0a)
+        {
+            u16[A0 + 0x3a] = 0x08
+        }
+        objA0.state = 0x3c
+        playSound(0x6e)
+
+        A1 = 0xffff0000 + u16[A0 + 0x44]
+        u8[A1 + 0x28] = 0
+    }
+
+    objA0.flags2a |= 0x40
+    Boss.updateHitFlashing(6, 0x075092, 0x07509e)
+
+    --objA0.state
+    if (objA0.state == 0)
+    {
+        objA0.flags2a &= ~0x40
+        u8[A0 + 0x28] = u8[A0 + 0x25]
+        A1 = 0xffff0000 + u16[A0 + 0x44]
+        objA1.collision_attributes = (collision.flag.THREAT | collision.size.32x16)
+    }
+}
+
+// 0x085a7a
+function void BigArms.PartsShared.CheckParentActive(u32 returnAddress)
+{
+    A1 = 0xffff0000 + u16[A0 + 0x46]
+    if (u8[A1 + 0x0a] & 0x80)
+    {
+        u8[A0 + 0x0a] |= 0x80
+
+        // Originally this is "objA0.update_address = u32[A7]"
+        //  -> But this wouldn't work in script, as the system stack is not used the same way
+        //  -> So the value has to be given explicitly
+        objA0.update_address = returnAddress
+    }
+}
+
+function bool BigArms.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
+{
+    if (objA0.update_address == makeCallable(BigArms.MainUpdate))
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Body.Update)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_body_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Body.WaitParentActive)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_body_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Back.Update)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_back_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Back.WaitParentActive)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_back_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Thruster.Update)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_thrust_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Thruster.WaitParentActive)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_thrust_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Arm.MainUpdate)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_arm_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Hands.UpdateGrapped)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_hand_0x%02x", objA0.animation.sprite), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Hands.Update)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_hand_0x%02x", objA0.animation.sprite), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Hands.WaitParentActive)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_hand_0x%02x", objA0.animation.sprite), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Elbow.Update)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_elbow_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    if (objA0.update_address == makeCallable(BigArms.Elbow.WaitParentActive)) 
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("big_arms_elbow_0x%02x", objA0.animation.frame), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
+    return false
+}

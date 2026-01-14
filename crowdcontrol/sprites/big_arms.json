@@ -1,0 +1,72 @@
+{
+    "big_arms_0x00": {
+        "File": "big_arms.png",
+        "Rect": "0,0,56,30",
+        "Center": "30,43"
+    },
+    "big_arms_body_0x00": {
+        "File": "big_arms.png",
+        "Rect": "58,0,77,80",
+        "Center": "40,40"
+    },
+    "big_arms_thrust_0x00": {
+        "File": "big_arms.png",
+        "Rect": "0,32,24,24",
+        "Center": "15,12"
+    },
+    "big_arms_back_0x00": {
+        "File": "big_arms.png",
+        "Rect": "137,34,40,24",
+        "Center": "20,12"
+    },
+    "big_arms_arm_0x00": {
+        "File": "big_arms.png",
+        "Rect": "137,0,64,32",
+        "Center": "32,16"
+    },
+    "big_arms_elbow_0x00": {
+        "File": "big_arms.png",
+        "Rect": "26,32,16,16",
+        "Center": "8,8"
+    },
+    "big_arms_hand_0x04": {
+        "File": "big_arms.png",
+        "Rect": "0,82,40,40",
+        "Center": "20,20"
+    },
+    "big_arms_hand_0x05": {
+        "File": "big_arms.png",
+        "Rect": "42,82,40,40",
+        "Center": "20,20"
+    },
+    "big_arms_hand_0x06": {
+        "File": "big_arms.png",
+        "Rect": "84,82,40,40",
+        "Center": "20,20"
+    },
+    "big_arms_hand_0x07": {
+        "File": "big_arms.png",
+        "Rect": "126,82,40,40",
+        "Center": "20,20"
+    },
+    "big_arms_hand_0x08": {
+        "File": "big_arms.png",
+        "Rect": "0,124,40,40",
+        "Center": "20,20"
+    },
+    "big_arms_hand_0x09": {
+        "File": "big_arms.png",
+        "Rect": "42,124,40,40",
+        "Center": "20,20"
+    },
+    "big_arms_hand_0x0a": {
+        "File": "big_arms.png",
+        "Rect": "84,124,40,40",
+        "Center": "20,20"
+    },
+    "big_arms_hand_0x0b": {
+        "File": "big_arms.png",
+        "Rect": "126,124,40,40",
+        "Center": "20,20"
+    }
+}

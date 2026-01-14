@@ -1,5 +1,6 @@
 include TestHooks
 include enemies/?
+include enemies/BigArms/?
 
 function u32 CrowdControl.Choose(u32 max)
 {

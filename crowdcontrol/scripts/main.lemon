@@ -1,6 +1,11 @@
 
 //# script-feature-level(2)
 
+include EnemySpawn
+include Bumpers
+include fixes
+include character_modification
+
 constant u8 object_size = 0x4A
 
 global bool blue_spheres_jail = false
@@ -112,6 +117,13 @@ function void PreFrameUpdate()
         }
     }
     CrowdControl.prev_paused = CrowdControl.paused
+    if (!global.game.paused)
+    {
+        if (BigArms.Timer > 0)
+        {
+            BigArms.Timer--
+        }
+    }
 }
 
 function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 duration)
@@ -546,6 +558,22 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "BigArms")
+    {
+        if (BigArms.Timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Can't spawn second Big Arms")
+            return
+        }
+        if (allocDynamicObjectStd())
+        {
+            objA1.update_address = makeCallable(BigArms.MainUpdate) //0x074262
+            CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+            return
+        }
+        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        return
+    }
     if (code == "NoJump")
     {
         if (no_jump_timer > 0)
@@ -647,6 +675,14 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
     {
         return true
     }
+    if (BigArms.onWriteToSpriteTable(px, py, renderQueue))
+    {
+        return true
+    }
+    if (RobotnikHead.onWriteToSpriteTable(px, py, renderQueue))
+    {
+        return true
+    }
     return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
 }
 
@@ -667,7 +703,7 @@ function void Debugging.debugDraw()
     {
         if (!key2_state)
         {
-            CrowdControl.triggerEffect(-1, "NoJumpAbility", 1, 10 * 1000)
+            CrowdControl.triggerEffect(-1, "BigArms", 1, 10 * 1000)
             key2_state = true
         }
     }
@@ -706,11 +742,6 @@ function void Debugging.debugDraw()
 }
 
 #endif
-
-include EnemySpawn
-include Bumpers
-include fixes
-include character_modification
 
 //# address-hook(0x01d566) end(0x01d570)
 function void MonitorIntact.BaseUpdate()
@@ -838,6 +869,18 @@ function void UpdateControllers()
     #endif
 }
 
+function void Standalone.onLevelStart() 
+{
+    BigArms.Timer = 0
+    base.Standalone.onLevelStart()
+}
+
+function void Standalone.onRestartAtCheckpoint() 
+{
+    BigArms.Timer = 0
+    base.Standalone.onRestartAtCheckpoint()
+}
+
 function void waitForNextFrame()
 {
     base.waitForNextFrame()
@@ -928,12 +971,12 @@ function void CrowdControl.SlapPlayer()
 
 function u32 seekObjectTableFor(u32 update_address)
 {
-    return seekObjectTableFor(update_address, 3, 108)
+    return seekObjectTableFor(update_address, 3, 110)
 }
 
 function u32 seekObjectTableFor(u32 update_address, u8 min)
 {
-    return seekObjectTableFor(update_address, min, 108)
+    return seekObjectTableFor(update_address, min, 110)
 }
 
 function u32 seekObjectTableFor(u32 update_address, u8 min, u8 max)
@@ -946,4 +989,21 @@ function u32 seekObjectTableFor(u32 update_address, u8 min, u8 max)
         }
     }
     return 0
+}
+
+function void unloadChildrenAt(u32 update_address, bool recursive)
+{
+    for (u8 i = 3; i < 110; i++)
+    {
+        u32 addr = 0xFFFFB000 + (object_size * i)
+        u32 parent = 0xFFFF0000 + u16[addr + 0x46]
+        if (parent == update_address)
+        {
+            if (recursive)
+            {
+                unloadChildrenAt(addr, true)
+            }
+            unloadObjectAt(addr)
+        }
+    }
 }
