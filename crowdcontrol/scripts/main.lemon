@@ -22,6 +22,10 @@ global u32 no_jump_id = 0
 global u32 no_jump_ability_timer = 0
 global u32 no_jump_ability_id = 0
 
+global u32 earthquake_timer = 0
+global u32 earthquake_id = 0
+global u32 earthquake_spawn_timer = 0
+
 //# pre-update-hook
 function void PreFrameUpdate()
 {
@@ -60,6 +64,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(no_jump_ability_id, CCStatusCode.PAUSED, "")
         }
+        if (earthquake_timer > 0)
+        {
+            CrowdControl.sendResponse(earthquake_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -75,6 +83,10 @@ function void PreFrameUpdate()
         if (no_jump_ability_timer > 0)
         {
             CrowdControl.sendResponse(no_jump_ability_id, CCStatusCode.RESUME, "")
+        }
+        if (earthquake_timer > 0)
+        {
+            CrowdControl.sendResponse(earthquake_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -103,16 +115,27 @@ function void PreFrameUpdate()
                 CrowdControl.sendResponse(no_jump_ability_id, CCStatusCode.FINISHED, "")
             }
         }
-    }
-    CrowdControl.prev_paused = CrowdControl.paused
-    if (!global.game.paused)
-    {
-        if (BigArms.Timer > 0)
+        if (earthquake_timer > 0)
         {
-            no_jump_ability_timer--
-            if (no_jump_ability_timer == 0)
+            if (camera.screenshake.state == 0)
             {
-                CrowdControl.sendResponse(no_jump_ability_id, CCStatusCode.FINISHED, "")
+                camera.screenshake.state.hi = 0xFF
+            }
+            UpdateScreenShake()
+            if (earthquake_spawn_timer > 0)
+            {
+                earthquake_spawn_timer--
+                if (earthquake_spawn_timer == 0)
+                {
+                    CrowdControl.SpawnEarthQuakeObject()
+                    earthquake_spawn_timer = 20
+                }
+            }
+            earthquake_timer--
+            if (earthquake_timer == 0)
+            {
+                camera.screenshake.state = 0
+                CrowdControl.sendResponse(earthquake_id, CCStatusCode.FINISHED, "")
             }
         }
     }
@@ -601,6 +624,20 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "Earthquake")
+    {
+        if (earthquake_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        earthquake_id = id
+        earthquake_spawn_timer = 10
+        
+        earthquake_timer = duration / 1000 * 60
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -683,6 +720,14 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
     {
         return true
     }
+    if (objA0.update_address == makeCallable(Earthquake.FallingRock.Update))
+    {
+        SpriteHandle spr = Renderer.addSpriteHandle(stringformat("falling_rocks_0x%02x", objA0.subtype2c), px, py, renderQueue)
+        spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+        spr.setBlendMode(1)
+        // spr.setCoordinateSpace(1)
+        return true
+    }
     return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
 }
 
@@ -703,7 +748,7 @@ function void Debugging.debugDraw()
     {
         if (!key2_state)
         {
-            CrowdControl.triggerEffect(-1, "BigArms", 1, 10 * 1000)
+            CrowdControl.triggerEffect(-1, "Earthquake", 1, 10 * 1000)
             key2_state = true
         }
     }
@@ -742,6 +787,15 @@ function void Debugging.debugDraw()
 }
 
 #endif
+
+// Did you know that each level handles its own screenshake?
+//# address-hook(0x04ed90) end(0x04edb0)
+function void LoadTileContentDefault()
+{
+    if (earthquake_timer > 0)
+        camera.foreground.y.u16 += camera.screenshake.offset
+    base.LoadTileContentDefault()
+}
 
 //# address-hook(0x01d566) end(0x01d570)
 function void MonitorIntact.BaseUpdate()
@@ -967,6 +1021,47 @@ function void CrowdControl.SlapPlayer()
     }
     
     A0 = ABackUp
+}
+
+function void CrowdControl.SpawnEarthQuakeObject()
+{
+    if (allocDynamicObjectStd())
+    {
+        //objA1.mapping_offset = 0x042920
+        objA1.sprite_attributes = (sprite_attribute.PALETTE.LINE2 | 0x03a1)
+        objA1.render_flags |= render_flag.WORLD
+        objA1.box_size.x = 0x10
+        objA1.box_size.y = 0x10
+        objA1.hitbox_extends.y = 0x0c
+        objA1.sprite_priority = 0x0280
+        u8 temp = System.rand() & 0x3
+        if (temp < 0x3)
+        {
+            objA1.subtype2c = 0x1
+        } 
+        else
+        {
+            objA1.collision_attributes = (collision.flag.THREAT | collision.size.12x20)
+        }
+        objA1.update_address = makeCallable(Earthquake.FallingRock.Update) //0x0428d6 LRZ FallingSpike.Fall?
+        objA1.position.x = camera.position.x
+        objA1.position.y = camera.position.y
+        objA1.position.x.u16 += (System.rand() & 0x7F) * 2 - 0x80
+        objA1.position.y.u16 += -(System.rand() & 0x7F) - 0x40
+        objA1.position.x.u16 += (getScreenWidth() / 2)
+        objA1.position.y.u16 += (getScreenHeight() / 2)
+    }
+}
+
+function void Earthquake.FallingRock.Update()
+{
+    UpdateMovementSimple()
+    CheckGroundCollision()
+    if (D0.u16 < 0 || objA0.position.y.u16 > camera.position.y.u16 + getScreenHeight())
+    {
+        UnloadObject()
+    }
+    fn01b662()
 }
 
 function u32 seekObjectTableFor(u32 update_address)

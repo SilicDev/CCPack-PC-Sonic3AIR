@@ -1,0 +1,12 @@
+{
+    "falling_rocks_0x00": {
+        "File": "falling_rocks.png",
+        "Rect": "0,0,16,32",
+        "Center": "8,16"
+    },
+    "falling_rocks_0x01": {
+        "File": "falling_rocks.png",
+        "Rect": "18,0,16,16",
+        "Center": "8,8"
+    }
+}

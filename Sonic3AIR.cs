@@ -74,6 +74,8 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 50, Duration = 10, Description = "Disables the player's ability to jump." },
                 new("Disable Jump Abilities", "NoJumpAbility")
                     { Price = 50, Duration = 20, Description = "Disables the player's jump abilities (Instashield, Flight, Glide)." },
+                new("Earthquake", "Earthquake")
+                    { Price = 50, Duration = 20, Description = "Starts an Earthquake that rains debris on the player." },
             ];
             return effects;
         }
