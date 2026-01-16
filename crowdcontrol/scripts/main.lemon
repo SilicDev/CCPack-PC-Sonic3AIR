@@ -26,6 +26,9 @@ global u32 earthquake_timer = 0
 global u32 earthquake_id = 0
 global u32 earthquake_spawn_timer = 0
 
+global u32 partnerBumper_timer = 0
+global u32 partnerBumper_id = 0
+
 //# pre-update-hook
 function void PreFrameUpdate()
 {
@@ -68,6 +71,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(earthquake_id, CCStatusCode.PAUSED, "")
         }
+        if (partnerBumper_timer > 0)
+        {
+            CrowdControl.sendResponse(partnerBumper_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -87,6 +94,10 @@ function void PreFrameUpdate()
         if (earthquake_timer > 0)
         {
             CrowdControl.sendResponse(earthquake_id, CCStatusCode.RESUME, "")
+        }
+        if (partnerBumper_timer > 0)
+        {
+            CrowdControl.sendResponse(partnerBumper_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -137,6 +148,12 @@ function void PreFrameUpdate()
                 camera.screenshake.state = 0
                 CrowdControl.sendResponse(earthquake_id, CCStatusCode.FINISHED, "")
             }
+        }
+        if (partnerBumper_timer > 0)
+        {
+            CrowdControl.partnerBumper()
+            if (partnerBumper_timer == 0)
+                CrowdControl.sendResponse(partnerBumper_id, CCStatusCode.FINISHED, "")
         }
     }
     CrowdControl.prev_paused = CrowdControl.paused
@@ -638,6 +655,18 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "PartnerBumper")
+    {
+        if (partnerBumper_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        partnerBumper_id = id        
+        partnerBumper_timer = duration / 1000 * 60
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -761,7 +790,7 @@ function void Debugging.debugDraw()
     {
         if (!key3_state)
         {
-            CrowdControl.triggerEffect(-1, "Asteron", 1, -1)
+            CrowdControl.triggerEffect(-1, "PartnerBumper", 1, 10 * 1000)
             key3_state = true
         }
     }
@@ -1101,4 +1130,76 @@ function void unloadChildrenAt(u32 update_address, bool recursive)
             unloadObjectAt(addr)
         }
     }
+}
+
+global u8 partnerBumper_cooldown = 0
+function void CrowdControl.partnerBumper()
+{
+    
+    if (global.game_mode != 0x0c)
+        return
+
+    partnerBumper_timer--
+
+    if (partnerBumper_cooldown > 0)
+    {
+        partnerBumper_cooldown--
+        return
+    }
+
+    if (getSecondCharacter() == 0xFF)
+        return
+
+    u32 backupA0 = A0
+    u32 backupA1 = A1
+
+    A0 = 0xffffb000 // player object
+
+    if (char.state == char.state.DIED)
+    {
+        A0 = backupA0
+        return
+    }
+
+    A1 = 0xffffb04a // partner (tails) object    
+
+    //debugDrawRect(objA0.position.x.u16-1, objA0.position.y.u16-1,3,3)
+    //debugDrawRect(objA0.position.x.u16 - (objA0.velocity.x / 64) -1, objA0.position.y.u16 - (objA0.velocity.y / 64) -1,3,3)
+    //debugDrawRect(objA1.position.x.u16-1, objA1.position.y.u16-1,3,3)
+
+    // determine distance between players
+    double deltaX = double(objA1.position.x.u16) - double(objA0.position.x.u16)
+	double deltaY = double(objA1.position.y.u16) - double(objA0.position.y.u16)
+    double delta = Math.sqrt( deltaX*deltaX + deltaY*deltaY )
+
+    // check bounce range
+    // exclude being *directly* on top of each other, since that'll cause math problems later
+    if (delta > 0 && delta < 28) 
+    {
+        // collide
+        partnerBumper_cooldown = 4
+        if (tails.control_counter < 4)
+            tails.control_counter = 4
+
+        deltaX *= ( 2000 / delta )  // scale to intended bounce speed
+        deltaY *= ( 2000 / delta )
+
+        objA0.velocity.x = -Math.roundToInt(deltaX * 0.75) // apply a little less to player than partner
+        objA0.velocity.y = -Math.roundToInt(deltaY * 0.75)
+
+        objA1.velocity.x = Math.roundToInt(deltaX)
+        objA1.velocity.y = Math.roundToInt(deltaY)
+
+        objA0.flags2a |= char.flag.IN_AIR
+	    objA0.flags2a &= ~char.flag.ON_OBJECT
+        objA1.flags2a |= char.flag.IN_AIR
+	    objA1.flags2a &= ~char.flag.ON_OBJECT
+
+        playSound(0xaa)
+
+    }
+
+    A0 = backupA0
+    A1 = backupA1
+
 }
