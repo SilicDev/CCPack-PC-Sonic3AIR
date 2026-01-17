@@ -43,6 +43,100 @@ function void Character.updateJumpMoves()
     base.Character.updateJumpMoves()
 }
 
+//# address-hook(0x01ab6c) end(0x01ab92)
+function void Character.UpdateMovement()
+{
+    UpdateMovementStraight()
+    u16 gravity = char.flags & char.flag.UNDERWATER ? 0x10 : 0x38
+    char.velocity.y += CrowdControl.calculateGravity(gravity)
+}
+
+//# address-hook(0x011036) end(0x01105e)
+function void Character.UpdateSonicRollingInAir()
+{
+    UpdateSonicJumpMoves()
+    Character.UpdateControlInAir()
+    Character.CheckAgainstMoveBorders()
+    Character.UpdateMovement()
+
+    Character.UpdateRotationInAir()
+    Character.CheckCollision()
+}
+
+function void updateTailsInAir_shared()
+{
+    UpdateTailsJumpMoves()
+    Character.UpdateControlInAir()
+    Character.CheckAgainstMoveBorders()
+    Character.UpdateMovement()
+
+    Character.UpdateRotationInAir()
+    Character.CheckCollision()
+}
+//# address-hook(0x017118) end(0x017140)
+function void Character.UpdateKnucklesRollingInAir()
+{
+    UpdateKnucklesJumpMoves()
+    Character.UpdateControlInAir()
+    Character.CheckAgainstMoveBorders()
+    Character.UpdateMovement()
+
+    Character.UpdateRotationInAir()
+    Character.CheckCollision()
+}
+
+//# address-hook(0x010868) end(0x010894)
+//# alias(fn010868) deprecated
+function void CompetitionMode.Character.UpdateUprightInAir.Sonic_Knuckles()
+{
+    UpdateSonicJumpMoves()
+    Character.UpdateControlInAir()
+    UpdateMovementSimple()
+
+
+    Character.UpdateRotationInAir()
+    pushA456()
+    Character.CheckCollision()
+    popA456()
+}
+
+//# address-hook(0x01335a) end(0x0133ac)
+//# alias(fn01335a) deprecated
+function void CompetitionMode.Character.UpdateUprightInAir.Tails()
+{
+    if (char.double_jump_state == 0)
+    {
+        UpdateTailsJumpMoves()
+        Character.UpdateControlInAir()
+        UpdateMovementSimple()
+    }
+    else
+    {
+        fn0133ae()
+        Character.UpdateControlInAir()
+        UpdateMovementStraightSimple()
+    }
+
+    Character.UpdateRotationInAir()
+    pushA456()
+    Character.CheckCollision()
+    popA456()
+}
+
+//# address-hook(0x01348c) end(0x0134b8)
+//# alias(fn01348c) deprecated
+function void CompetitionMode.Character.UpdateRollingInAir.Tails()
+{
+    UpdateTailsJumpMoves()
+    Character.UpdateControlInAir()
+    UpdateMovementSimple()
+
+    Character.UpdateRotationInAir()
+    pushA456()
+    Character.CheckCollision()
+    popA456()
+}
+
 // If this was a function split into multiple components, I wouldn't have to overwrite it like this
 // alas, let's pray it doesn't break any character mods
 //# address-hook(0x016890) end(0x016c78)
@@ -265,7 +359,8 @@ function void UpdateKnucklesGlideCollision()
         Character.UpdateControlInAir()
 
         // Gravity
-        char.velocity.y += (char.flags & char.flag.UNDERWATER) ? 0x10 : 0x38
+        u16 gravity = (char.flags & char.flag.UNDERWATER) ? 0x10 : 0x38
+        char.velocity.y += CrowdControl.calculateGravity(gravity)
 
         fn01793e()
         if ((knuckles.glideclimbstate & 0x02) == 0)

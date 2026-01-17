@@ -140,11 +140,7 @@ function void BigArms.Init()
 
     // "spawnChildObjects(0x068184)" replaced by:
     //spawnChildObject(0x067cd2, 0x00, 0, -28)        // Robotnik head
-    u8 head_type = 0xFF
-    while (head_type > 0x03)
-    {
-        head_type = System.rand() & 0x03
-    }
+    u8 head_type = System.rand() % 4
     spawnChildObject(makeCallable(RobotnikHead.MainUpdate), head_type, 0, -28)        // Robotnik head
 }
 

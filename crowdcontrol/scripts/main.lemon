@@ -2,7 +2,7 @@
 //# script-feature-level(2)
 
 #define HAS_CROWD_CONTROL_MOD
-#define CROWD_CONTROL_VERSION 0x010000
+#define CROWD_CONTROL_VERSION = 0x010000
 
 include EnemySpawn
 include Bumpers
@@ -30,6 +30,15 @@ global u32 earthquake_spawn_timer = 0
 
 global u32 partnerBumper_timer = 0
 global u32 partnerBumper_id = 0
+
+global u32 gravity_timer = 0
+global u32 gravity_id = 0
+global u32 gravity_swap_timer = 0
+constant array<u16> gravity_values =
+{
+    1, 2, 512, 1024,
+}
+global u16 gravity_value = 1
 
 //# pre-update-hook
 function void PreFrameUpdate()
@@ -77,6 +86,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(partnerBumper_id, CCStatusCode.PAUSED, "")
         }
+        if (gravity_timer > 0)
+        {
+            CrowdControl.sendResponse(gravity_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -100,6 +113,10 @@ function void PreFrameUpdate()
         if (partnerBumper_timer > 0)
         {
             CrowdControl.sendResponse(partnerBumper_id, CCStatusCode.RESUME, "")
+        }
+        if (gravity_timer > 0)
+        {
+            CrowdControl.sendResponse(gravity_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -156,6 +173,27 @@ function void PreFrameUpdate()
             CrowdControl.partnerBumper()
             if (partnerBumper_timer == 0)
                 CrowdControl.sendResponse(partnerBumper_id, CCStatusCode.FINISHED, "")
+        }
+        if (gravity_timer > 0)
+        {
+            gravity_timer--
+            if (gravity_swap_timer > 0)
+            {
+                gravity_swap_timer--
+            }
+            if (gravity_swap_timer == 0)
+            {
+                u8 rand = System.rand() & 0x03
+                gravity_value = gravity_values[rand]
+                rand = System.rand() % 5 + 1
+                gravity_swap_timer = rand * 30
+            }
+            if (gravity_timer == 0)
+            {
+                gravity_swap_timer = 0
+                gravity_value = 1
+                CrowdControl.sendResponse(gravity_id, CCStatusCode.FINISHED, "")
+            }
         }
     }
     CrowdControl.prev_paused = CrowdControl.paused
@@ -657,8 +695,26 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "Gravity")
+    {
+        if (gravity_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        gravity_id = id
+        
+        gravity_timer = duration / 1000 * 60
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
     if (code == "PartnerBumper")
     {
+        if (getSecondCharacter() == 0xFF)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "No Second Character")
+            return
+        }
         if (partnerBumper_timer > 0)
         {
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
@@ -779,7 +835,7 @@ function void Debugging.debugDraw()
     {
         if (!key2_state)
         {
-            CrowdControl.triggerEffect(-1, "Earthquake", 1, 10 * 1000)
+            CrowdControl.triggerEffect(-1, "Gravity", 1, 10 * 1000)
             key2_state = true
         }
     }
@@ -826,6 +882,28 @@ function void LoadTileContentDefault()
     if (earthquake_timer > 0)
         camera.foreground.y.u16 += camera.screenshake.offset
     base.LoadTileContentDefault()
+}
+
+function u16 CrowdControl.calculateGravity(u16 gravity)
+{
+    if (gravity_timer > 0)
+    {
+        if (gravity_value > 0xFF)
+        {
+            gravity *= gravity_value >> 8
+        }
+        else
+        {
+            gravity /= gravity_value
+        }
+    }
+    return gravity
+}
+
+function void moveWithGravity(u16 gravity)
+{
+    gravity = CrowdControl.calculateGravity(gravity)
+    base.moveWithGravity(gravity)
 }
 
 //# address-hook(0x01d566) end(0x01d570)
@@ -1138,7 +1216,7 @@ global u8 partnerBumper_cooldown = 0
 function void CrowdControl.partnerBumper()
 {
     
-    if (global.game_mode != 0x0c)
+    if (global.game_mode != GAME_MODE_MAIN_GAME)
         return
 
     partnerBumper_timer--
