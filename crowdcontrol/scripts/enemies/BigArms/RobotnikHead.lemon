@@ -43,7 +43,7 @@ function void RobotnikHead.Defeated()
     if ((u8[A0 + 0x0a] & 0x80) != (u8[A1 + 0x0a] & 0x80))
     {
         u8[A0 + 0x0a] = (u8[A0 + 0x0a] & ~0x80) | (u8[A1 + 0x0a] & 0x80)
-        if (global.zone_act == 0x0601 && camera.position.y.u16 == 0x0668)
+        if (global.zone_act == ZONEACT_LBZ2 && camera.position.y.u16 == 0x0668)
         {
             // Switch sprite again for Robotnik when he goes up to get Big Arms
             objA0.animation.sprite = 1
