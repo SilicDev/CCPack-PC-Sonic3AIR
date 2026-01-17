@@ -15,7 +15,7 @@ function void Bumper.Init()
 	u16[A0 + 0x30] = objA0.position.x.u16
 	objA0.value32 = objA0.position.y.u16
 
-	if (global.zone == 0x14) // Glowing Spheres Bonus
+	if (global.zone == ZONE_BONUS_GS) // Glowing Spheres Bonus
 	{
 		objA0.mapping_offset = 0x0330a2
 		objA0.sprite_attributes = (sprite_attribute.PALETTE.LINE3 | 0x02cd)

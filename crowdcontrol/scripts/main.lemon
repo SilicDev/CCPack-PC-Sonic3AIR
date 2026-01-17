@@ -1,12 +1,14 @@
 
 //# script-feature-level(2)
 
+#define HAS_CROWD_CONTROL_MOD
+#define CROWD_CONTROL_VERSION 0x010000
+
 include EnemySpawn
 include Bumpers
 include fixes
 include character_modification
-
-constant u8 object_size = 0x4A
+include define_constants
 
 global bool blue_spheres_jail = false
 
@@ -37,17 +39,17 @@ function void PreFrameUpdate()
     {
         tails.control_counter = 600 // don't let the AI mess with us
     }
-    if (global.game_mode == 0x2c && blue_spheres_jail)
+    if (global.game_mode == GAME_MODE_BLUE_SPHERES_MENU && blue_spheres_jail)
     {
         bluespheregame.current_stage = System.rand()
         BlueSphere.setGeneratedStage(bluespheregame.current_stage)
         global.stage_type = 0
         bluespheres.minigame_mode = 1
-        global.game_mode = 0x34 // Special Stage
+        global.game_mode = GAME_MODE_SPECIAL_STAGE
     }
-    if (global.game_mode == 0x30 && blue_spheres_jail)
+    if (global.game_mode == GAME_MODE_BLUE_SPHERES_RESULTS && blue_spheres_jail)
     {
-        global.game_mode = 0x0c
+        global.game_mode = GAME_MODE_MAIN_GAME
         blue_spheres_jail = false
         global.stage_type = 1
     }
@@ -401,7 +403,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     if (code == "BlueSpheres")
     {
-        if (global.game_mode != 0x0c || global.zone == 0x0c || global.zone == 0x16 || level.boss_encounter || Game.isInSkippableCutscene())
+        if (global.game_mode != GAME_MODE_MAIN_GAME || global.zone >= ZONE_DDZ || level.boss_encounter || Game.isInSkippableCutscene())
         {
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
             return
@@ -410,14 +412,14 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         fn01bb7e()
         fn02d1cc()
         global.stage_type = 1
-        global.game_mode = 0x2c // Blue Sphere Game
+        global.game_mode = GAME_MODE_BLUE_SPHERES_MENU
         global.in_extra_stage = 1
         blue_spheres_jail = true
         bluespheregame.current_stage = System.rand()
         BlueSphere.setGeneratedStage(bluespheregame.current_stage)
         global.stage_type = 0
         bluespheres.minigame_mode = 1
-        global.game_mode = 0x34 // Special Stage
+        global.game_mode = GAME_MODE_SPECIAL_STAGE
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
         
@@ -444,7 +446,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     if (code == "GiveEmerald")
     {
-        if (global.super_emeralds >= 7 || global.zone == 0x0c)
+        if (global.super_emeralds >= 7 || global.zone == ZONE_DDZ)
         {
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
             return
@@ -464,7 +466,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     if (code == "TakeEmerald")
     {
-        if (global.chaos_emeralds == 0 || global.zone == 0x0c)
+        if (global.chaos_emeralds == 0 || global.zone == ZONE_DDZ)
         {
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
             return
@@ -482,7 +484,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             Character.cancelSuperTransformation()
             CrowdControl.SlapPlayer()
         }
-        if (global.zone != 0x0c)    // No music change in DDZ
+        if (global.zone != ZONE_DDZ)    // No music change in DDZ
         {
             chooseFittingMusic()
         }
@@ -1107,9 +1109,9 @@ function u32 seekObjectTableFor(u32 update_address, u8 min, u8 max)
 {
     for (u8 i = min; i < max; i++)
     {
-        if (u32[0xFFFFB000 + (object_size * i) + 0x00] == update_address)
+        if (u32[0xFFFFB000 + (OBJECT_SIZE * i) + 0x00] == update_address)
         {
-            return 0xFFFFB000 + (object_size * i)
+            return 0xFFFFB000 + (OBJECT_SIZE * i)
         }
     }
     return 0
@@ -1119,7 +1121,7 @@ function void unloadChildrenAt(u32 update_address, bool recursive)
 {
     for (u8 i = 3; i < 110; i++)
     {
-        u32 addr = 0xFFFFB000 + (object_size * i)
+        u32 addr = 0xFFFFB000 + (OBJECT_SIZE * i)
         u32 parent = 0xFFFF0000 + u16[addr + 0x46]
         if (parent == update_address)
         {

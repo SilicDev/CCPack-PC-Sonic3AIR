@@ -19,7 +19,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 	// of enemies per zone to pick from instead of this,
 	// but can't initialize with addressof.
 	
-	if (global.zone.apparent == 0x00)
+	if (global.zone.apparent == ZONE_AIZ)
 	{
 		// AIZ
 		rand = CrowdControl.Choose(3)
@@ -40,7 +40,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Bloominator.BaseUpdate)
 		}
 	}
-	else if (global.zone.apparent == 0x01)
+	else if (global.zone.apparent == ZONE_HCZ)
 	{
 		// HCZ
 		rand = CrowdControl.Choose(5)
@@ -69,7 +69,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(TurboSpiker.Update)
 		}
 	}
-	else if (global.zone.apparent == 0x02)
+	else if (global.zone.apparent == ZONE_MGZ)
 	{
 		// MGZ
 		rand = CrowdControl.Choose(3)
@@ -90,7 +90,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Driller.Update)
 		}
 	}
-	else if (global.zone.apparent == 0x03)
+	else if (global.zone.apparent == ZONE_CNZ)
 	{
 		// CNZ
 		rand = CrowdControl.Choose(2)
@@ -107,7 +107,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Sparkle.BaseUpdate)
 		}
 	}
-	else if (global.zone.apparent == 0x05)
+	else if (global.zone.apparent == ZONE_ICZ)
 	{
 		// ICZ
 		rand = CrowdControl.Choose(2)
@@ -125,7 +125,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(StarPointer.Update)
 		}
 	}
-	else if (global.zone.apparent == 0x06)
+	else if (global.zone.apparent == ZONE_LBZ)
 	{
 		// LBZ
 		rand = CrowdControl.Choose(4)
@@ -151,7 +151,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(SnailBlaster.BaseUpdate)
 		}
 	}
-	else if (global.zone.apparent == 0x07)
+	else if (global.zone.apparent == ZONE_MHZ)
 	{
 		// MHZ
 		rand = CrowdControl.Choose(4)
@@ -176,7 +176,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Mushmeanie.BaseUpdate)
 		}
 	}
-	else if (global.zone.apparent == 0x04)
+	else if (global.zone.apparent == ZONE_FBZ)
 	{
 		// FBZ
 		rand = CrowdControl.Choose(1)
@@ -189,7 +189,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Technosqueek.Update)
 		}
 	}
-	else if (global.zone.apparent == 0x08)
+	else if (global.zone.apparent == ZONE_SOZ)
 	{
 		// SOZ
 		rand = CrowdControl.Choose(2)
@@ -208,16 +208,16 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Skorp.Update)
 		}
 	}
-	else if (global.zone_act == 0x1600) 
+	else if (global.zone_act == ZONEACT_LRZ_BOSS_ST) 
 	{
 		// LRZ boss
 	}
-	else if (global.zone_act == 0x1601)
+	else if (global.zone_act == ZONEACT_HPZ)
 	{
 		// HPZ
 		updateAddress =  makeCallable(Jimmy.Update)
 	}
-	else if (global.zone.apparent == 0x09)
+	else if (global.zone.apparent == ZONE_LRZ)
 	{
 		// LRZ
 		rand = CrowdControl.Choose(2)
@@ -234,14 +234,14 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Toxomister.PostInit)
 		}
 	}
-	else if (global.zone.apparent == 0x0a)
+	else if (global.zone.apparent == ZONE_SSZ)
 	{
 		// SSZ
 		// need to look into this more - seems to just spawn the animation of it appearing, but not the
 		// actual enemy. Presumably some extra initialization needed somewhere or it needs to be a diffent function entirely
 		updateAddress = addressof(EggRobo.BaseUpdate)
 	}
-	else if (global.zone.apparent == 0x0b)
+	else if (global.zone.apparent == ZONE_DEZ)
 	{
 		// DEZ
 		rand = CrowdControl.Choose(1)
@@ -254,7 +254,7 @@ function bool CrowdControl.SpawnRandomEnemy()
 			updateAddress = addressof(Spikebonker.Update)
 		}
 	}
-	else if (global.zone.apparent == 0x0c)
+	else if (global.zone.apparent == ZONE_DDZ)
 	{
 		// DDZ
 	}

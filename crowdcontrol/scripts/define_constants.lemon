@@ -1,0 +1,144 @@
+// Regular zones:
+//  0x00 = AIZ - Angel Island
+//  0x01 = HCZ - Hydrocity
+//  0x02 = MGZ - Marble Garden
+//  0x03 = CNZ - Carnival Night
+//  0x05 = ICZ - IceCap
+//  0x06 = LBZ - Launch Base
+//  0x07 = MHZ - Mushroom Hill
+//  0x04 = FBZ - Flying Battery
+//  0x08 = SOZ - Sandopolis
+//  0x09 = LRZ - Lava Reef
+//  0x0a = SSZ - Sky Sanctuary (0x0a00 for Sonic/Tails, 0x0a01 for Knuckles' End Bosses)
+//  0x0b = DEZ - Death Egg
+//  0x0c = DDZ - Doomsday (0x0c00)
+//  0x0d = Outro for Sonic/Tails (0x0d01), Angel Island act 1 without Sonic's Intro (0x0d00)
+//  0x16 = Lava Reef Boss for Sonic/Tails (0x1600), Hidden Palace (0x1601)
+//  0x17 = Hidden Palace emerald cave when entered through Giant Ring (0x1701), Death Egg Boss (0x1700)
+//
+// Competition mode:
+//  0x0e = Azure Lake
+//  0x0f = Balloon Park
+//  0x10 = Desert Palace
+//  0x11 = Chrome Gadget
+//  0x12 = Endless Mine
+//
+// Bonus stages:
+//  0x13 = GM - Gumball Machine
+//  0x14 = GS - Glowing Spheres
+//  0x15 = SM - Slot Machine
+
+//-------------------------------------------------------//
+// Compare with global.zone_act.apparent                 //
+//-------------------------------------------------------//
+// Sonic 3
+constant u16 ZONEACT_AIZ1 = 0x0000
+constant u16 ZONEACT_AIZ2 = 0x0001
+constant u16 ZONEACT_HCZ1 = 0x0100
+constant u16 ZONEACT_HCZ2 = 0x0101
+constant u16 ZONEACT_MGZ1 = 0x0200
+constant u16 ZONEACT_MGZ2 = 0x0201
+constant u16 ZONEACT_CNZ1 = 0x0300
+constant u16 ZONEACT_CNZ2 = 0x0301
+constant u16 ZONEACT_ICZ1 = 0x0500
+constant u16 ZONEACT_ICZ2 = 0x0501
+constant u16 ZONEACT_LBZ1 = 0x0600
+constant u16 ZONEACT_LBZ2 = 0x0601
+// & Knuckles
+constant u16 ZONEACT_MHZ1 = 0x0700
+constant u16 ZONEACT_MHZ2 = 0x0701
+constant u16 ZONEACT_FBZ1 = 0x0400
+constant u16 ZONEACT_FBZ2 = 0x0401
+constant u16 ZONEACT_SOZ1 = 0x0800
+constant u16 ZONEACT_SOZ2 = 0x0801
+constant u16 ZONEACT_LRZ1 = 0x0900
+constant u16 ZONEACT_LRZ2 = 0x0901
+constant u16 ZONEACT_SSZ_ST = 0x0a00
+constant u16 ZONEACT_SSZ_K = 0x0a01
+constant u16 ZONEACT_DEZ1 = 0x0b00
+constant u16 ZONEACT_DEZ2 = 0x0b01
+constant u16 ZONEACT_DDZ = 0x0c00
+constant u16 ZONEACT_AIZ1_NO_INTRO = 0x0d00
+constant u16 ZONEACT_OUTRO_ST = 0x0d01
+constant u16 ZONEACT_LRZ_BOSS_ST = 0x1600
+constant u16 ZONEACT_HPZ = 0x1601
+constant u16 ZONEACT_DEZ_BOSS = 0x1700
+
+
+//-------------------------------------------------------//
+// Compare with global.zone.apparent                     //
+//-------------------------------------------------------//
+// Sonic 3
+constant u8 ZONE_AIZ = 0x00
+constant u8 ZONE_HCZ = 0x01
+constant u8 ZONE_MGZ = 0x02
+constant u8 ZONE_CNZ = 0x03
+constant u8 ZONE_ICZ = 0x05
+constant u8 ZONE_LBZ = 0x06
+// & Knuckles
+constant u8 ZONE_MHZ = 0x07
+constant u8 ZONE_FBZ = 0x04
+constant u8 ZONE_SOZ = 0x08
+constant u8 ZONE_LRZ = 0x09
+constant u8 ZONE_SSZ = 0x0a
+constant u8 ZONE_DEZ = 0x0b
+constant u8 ZONE_DDZ = 0x0c
+// Competition
+constant u8 ZONE_COMP_ALZ = 0x0e
+constant u8 ZONE_COMP_BPZ = 0x0f
+constant u8 ZONE_COMP_DPZ = 0x10
+constant u8 ZONE_COMP_CGZ = 0x11
+constant u8 ZONE_COMP_EMZ = 0x12
+// Bonus Stage
+constant u8 ZONE_BONUS_GM = 0x13
+constant u8 ZONE_BONUS_GS = 0x14
+constant u8 ZONE_BONUS_SM = 0x15
+
+// Game mode (see "GameModeControlLoop()" for more details):
+//  - 0x00 = Initialization
+//  - 0x04 = SEGA logo, Intro, Title Screen
+//  - 0x08 = Rolling Demo
+//  - 0x0c = Main Game (normal game + Competition Mode)
+//  - 0x10 = "JumpToSegaScreen" according to s3unlocked, does not seem to be used?
+//  - 0x14 = Continue Screen
+//  - 0x18 = "JumpToSegaScreen" according to s3unlocked, does not seem to be used?
+//  - 0x1c = Level Select
+//  - 0x20 = Credits screen in Sonic 3
+//  - 0x24 = Level Select
+//  - 0x28 = Level Select
+//  - 0x2c = Blue Sphere game: Menu
+//  - 0x30 = Blue Sphere game: Results Screen
+//  - 0x34 = Special Stage
+//  - 0x38 = Competition Mode: Main Menu
+//  - 0x3c = Competition Mode: Player Selection
+//  - 0x40 = Competition Mode: Level Selection
+//  - 0x44 = Competition Mode: Results Screen
+//  - 0x48 = Special Stage results
+//  - 0x4c = Data Select
+//  - 0x50 = Competition Mode: Records Screen
+//  + Flag 0x80 is set during loading for some modes (incl. Main Game)
+constant u8 GAME_MODE_INIT = 0x00
+constant u8 GAME_MODE_INTRO = 0x04
+constant u8 GAME_MODE_DEMO = 0x08
+constant u8 GAME_MODE_MAIN_GAME = 0x0c
+constant u8 GAME_MODE_REBOOT = 0x10
+constant u8 GAME_MODE_CONTINUE = 0x14
+constant u8 GAME_MODE_REBOOT_2 = 0x18
+constant u8 GAME_MODE_LEVEL_SELECT = 0x1c
+constant u8 GAME_MODE_CREDITS_S3 = 0x20
+constant u8 GAME_MODE_LEVEL_SELECT_2 = 0x24
+constant u8 GAME_MODE_LEVEL_SELECT_3 = 0x28
+constant u8 GAME_MODE_BLUE_SPHERES_MENU = 0x2c
+constant u8 GAME_MODE_BLUE_SPHERES_RESULTS = 0x30
+constant u8 GAME_MODE_SPECIAL_STAGE = 0x34
+constant u8 GAME_MODE_COMP_MENU = 0x38
+constant u8 GAME_MODE_COMP_PLAYER_SELECT = 0x3c
+constant u8 GAME_MODE_COMP_LEVEL_SELECT = 0x40
+constant u8 GAME_MODE_COMP_RESULTS = 0x44
+constant u8 GAME_MODE_SPECIAL_STAGE_RESULTS = 0x48
+constant u8 GAME_MODE_DATA_SELECT = 0x4c
+constant u8 GAME_MODE_COMP_RECORDS = 0x50
+constant u8 GAME_MODE_MASK = 0x7c
+constant u8 GAME_MODE_LOADING = 0x80
+
+constant u8 OBJECT_SIZE = 0x4a

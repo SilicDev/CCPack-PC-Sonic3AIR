@@ -15,7 +15,7 @@ function void UpdateGamePause()
     if (Input.buttonPressed(BUTTON_L))
     #endif
 	{		
-		if (global.zone_act == 0x0c00)
+		if (global.zone_act == ZONEACT_DDZ)
 		{
 			if (!CrowdControl.SpawnEnemy(makeCallable(ExtraMissile.Init), getScreenWidth()/2, 0))
 			{
