@@ -23,7 +23,7 @@ function u16 RenderTime(s16 x, s16 y, u16 renderQueue, bool isBonusStage)
         u16 minutes = timer.minutes
         u16 seconds = timer.seconds
         u16 frames = timer.frames
-        if (hud.dirty.timer && !global.game.paused && timer.alldata < 0x93b3b)	// That is 9:59 and 59 frames
+        if (hud.dirty.timer && !global.game.paused && timer.alldata < 0x93b3b)    // That is 9:59 and 59 frames
         {
             ++frames
             seconds += (frames / 60)
@@ -103,75 +103,72 @@ function u16 RenderLives(s16 x, s16 y, u16 renderQueue, bool isBonusStage)
 function void RenderHUD()
 {
 #if STANDALONE
-	if (DEBUG_DISABLE_HUD)
-		return
+    if (DEBUG_DISABLE_HUD)
+        return
 #endif
 
-	s16 baseX = global.level_started
-	if (baseX < 0)
-	{
-		baseX += 8
-		global.level_started = baseX
-	}
-	baseX += 0x0f
-	s16 baseY = 0x08
-	u16 renderQueue = 0xe000
+    s16 baseX = global.level_started
+    if (baseX < 0)
+    {
+        baseX += 8
+        global.level_started = baseX
+    }
+    baseX += 0x0f
+    s16 baseY = 0x08
+    u16 renderQueue = 0xe000
 
-	bool isBonusStage = (global.zone >= ZONE_BONUS_GM && global.zone <= ZONE_BONUS_SM)
+    bool isBonusStage = (global.zone >= ZONE_BONUS_GM && global.zone <= ZONE_BONUS_SM)
 #if STANDALONE
-	if (!debug_mode.state)
-	{
-		if (!isBonusStage)
-		{
-			// Score
-			renderQueue = RenderScore(baseX, baseY, renderQueue, isBonusStage)
+    if (!debug_mode.state)
+    {
+        // Score
+        renderQueue = RenderScore(baseX, baseY, renderQueue, isBonusStage)
 
-			// Time
-			renderQueue = RenderTime(baseX, baseY, renderQueue, isBonusStage)
-		}
+        // Time
+        renderQueue = RenderTime(baseX, baseY, renderQueue, isBonusStage)
 
-		// Rings
-		renderQueue = RenderRings(baseX, baseY, renderQueue, isBonusStage)
+        // Rings
+        renderQueue = RenderRings(baseX, baseY, renderQueue, isBonusStage)
 
-		// Lives (not visible in Time Attack or with infinite lives setting)
-		renderQueue = RenderLives(baseX, baseY, renderQueue, isBonusStage)
-	}
-	else
+        // Lives (not visible in Time Attack or with infinite lives setting)
+        renderQueue = RenderLives(baseX, baseY, renderQueue, isBonusStage)
+    }
+    else
 #endif
-	{
-		D4 = (isBonusStage) ? 8 : 0
+    {
+        D4 = (isBonusStage) ? 8 : 0
 
-		if ((level.framecounter & 0x08) == 0)
-		{
-			if (ring_counter == 0)
-			{
-				D4 += 2		// Set rings HUD text to flicker
-			}
-			if (timer.minutes == 9 && !isBonusStage)
-			{
-				D4 += 4		// Set timer HUD text to flicker
-			}
-		}
+        if ((level.framecounter & 0x08) == 0)
+        {
+            if (ring_counter == 0)
+            {
+                D4 += 2        // Set rings HUD text to flicker
+            }
+            if (timer.minutes == 9 && !isBonusStage)
+            {
+                D4 += 4        // Set timer HUD text to flicker
+            }
+        }
 
-		// Targets:
-		//  - 0x00dbc2	-> D4.u16 = 0x00		// Complete HUD text
-		//  - 0x00dc00	-> D4.u16 = 0x02		// HUD with rings text flickering
-		//  - 0x00dc32	-> D4.u16 = 0x04		// HUD with time text flickering
-		//  - 0x00dc6a	-> D4.u16 = 0x06		// HUD with both rings and time flickering
-		//  - 0x00dc96	-> D4.u16 = 0x08		// Bonus stage HUD
-		//  - 0x00dcb6	-> D4.u16 = 0x0a		// Bonus stage HUD with rings text flickering
-		A1 = tableLookupAddress(0x00dbb6, D4.u16)
+        // Targets:
+        //  - 0x00dbc2    -> D4.u16 = 0x00        // Complete HUD text
+        //  - 0x00dc00    -> D4.u16 = 0x02        // HUD with rings text flickering
+        //  - 0x00dc32    -> D4.u16 = 0x04        // HUD with time text flickering
+        //  - 0x00dc6a    -> D4.u16 = 0x06        // HUD with both rings and time flickering
+        //  - 0x00dc96    -> D4.u16 = 0x08        // Bonus stage HUD
+        //  - 0x00dcb6    -> D4.u16 = 0x0a        // Bonus stage HUD with rings text flickering
+        A1 = tableLookupAddress(0x00dbb6, D4.u16)
 
-		D4.s16 = u16[A1] - 1
-		D0.s16 = baseX + 0x80
-		D1.u16 = 0x0108
-		D5.u16 = 0x86ca
-		A1 += 2
-		if (D4.s16 >= 0)
-		{
-			writeToSpriteTable(renderQueue)
-		}
-	}
+        D4.s16 = u16[A1] - 1
+        D0.s16 = baseX + 0x80
+        D1.u16 = 0x0108
+        D5.u16 = 0x86ca
+        A1 += 2
+        if (D4.s16 >= 0)
+        {
+            writeToSpriteTable(renderQueue)
+        }
+    }
 }
 
 
