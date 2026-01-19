@@ -9,6 +9,7 @@ include Bumpers
 include fixes
 include character_modification
 include define_constants
+include HUD
 
 global bool blue_spheres_jail = false
 
@@ -39,6 +40,8 @@ constant array<u16> gravity_values =
     1, 2, 512, 1024,
 }
 global u16 gravity_value = 1
+
+global u32 deaths = 0
 
 //# pre-update-hook
 function void PreFrameUpdate()
@@ -1036,6 +1039,12 @@ function void Standalone.onLevelStart()
 {
     BigArms.Timer = 0
     base.Standalone.onLevelStart()
+}
+
+function void Standalone.onDeath()
+{
+    deaths++
+    base.Standalone.onDeath()
 }
 
 function void Standalone.onRestartAtCheckpoint() 
