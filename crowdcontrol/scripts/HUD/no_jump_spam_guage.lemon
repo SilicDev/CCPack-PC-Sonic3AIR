@@ -1,0 +1,53 @@
+constant u8 CrowdControl_NO_JUMP_HUD.maxLozenges = 37
+
+//# address-hook(0x00db44) end(0x00dbb2)
+function void RenderHUD()
+{
+    CrowdControl_EFFECTS_HUD.drawJumpSpam(0xe000)
+    base.RenderHUD()
+}
+
+
+function void CrowdControl_TIMER_HUD.fllTimerBarVertical(s16 px, s16 py, u16 max, u16 remaining,  u16 rq)
+{
+    u8 lozenges = CrowdControl_TIMER_HUD.getFilledLozenges(max, remaining, CrowdControl_NO_JUMP_HUD.maxLozenges)
+    py += 14
+    for (u8 i = 0; i < lozenges; i++)
+    {
+        SpriteHandle loz = Renderer.addSpriteHandle("CrowdControl_effects_jump_spam_lozenge", px, py-i, rq)
+        loz.setPriorityFlag(true)
+    }
+}
+
+function void CrowdControl_EFFECTS_HUD.drawJumpSpam(u16 rq)
+{
+
+    if (no_jump_timer == 0)
+        return
+
+    s16 px = s16(u16[0xffffb000 + 0x10] - camera.position.x.u16)
+    s16 py = s16(u16[0xffffb000 + 0x14] - camera.position.y.u16)
+    bool faceLeft = (u8[0xffffb000 + 0x2a] & char.flag.FACING_LEFT) != 0
+    s16 x = faceLeft ? px + 24 : px - 24
+
+    // keep on screen
+    if (x+8 > getScreenWidth())
+    {
+        x = getScreenWidth() -8
+    }
+    if (x < 8) 
+    {
+        x = 8
+    }
+
+    s16 y = py - 5
+    SpriteHandle back = Renderer.addSpriteHandle("CrowdControl_effects_jump_spam_bar_back", x, y, rq++)
+    back.setOpacity(0.3)
+
+    CrowdControl_TIMER_HUD.fllTimerBarVertical(x , y ,NO_JUMP_DURATION, NO_JUMP_DURATION - no_jump_timer , rq++)
+
+    u8 animFrame = ((global.framecounter.low / 7) & 1)
+    SpriteHandle button = Renderer.addSpriteHandle(stringformat("CrowdControl_effects_jump_spam_bar_%d", animFrame), x, y, rq++)
+    button.setPriorityFlag(true)
+
+}

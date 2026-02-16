@@ -1,3 +1,5 @@
+
+
 function u16 RenderScore(s16 x, s16 y, u16 renderQueue, bool isBonusStage)
 {
     if (!isBonusStage)
@@ -102,10 +104,10 @@ function u16 RenderLives(s16 x, s16 y, u16 renderQueue, bool isBonusStage)
 //# address-hook(0x00db44) end(0x00dbb2)
 function void RenderHUD()
 {
-#if STANDALONE
+    #if STANDALONE
     if (DEBUG_DISABLE_HUD)
         return
-#endif
+    #endif
 
     s16 baseX = global.level_started
     if (baseX < 0)
@@ -118,7 +120,7 @@ function void RenderHUD()
     u16 renderQueue = 0xe000
 
     bool isBonusStage = (global.zone >= ZONE_BONUS_GM && global.zone <= ZONE_BONUS_SM)
-#if STANDALONE
+    #if STANDALONE
     if (!debug_mode.state)
     {
         // Score
@@ -134,7 +136,7 @@ function void RenderHUD()
         renderQueue = RenderLives(baseX, baseY, renderQueue, isBonusStage)
     }
     else
-#endif
+        #endif
     {
         D4 = (isBonusStage) ? 8 : 0
 

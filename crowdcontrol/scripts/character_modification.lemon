@@ -5,6 +5,7 @@ function bool Character.CheckStartJump()
 {
     if (no_jump_timer > 0)
     {
+        CrowdControl.updateNoJumpTimer()
         return false
     }
     return base.Character.CheckStartJump()
@@ -31,6 +32,10 @@ function void fn016e60() //Character.KnucklesWallIdleUpdate
         char.hitbox_extends.x = char.hitbox.x.ROLLING
         char.hitbox_extends.y = char.hitbox.y.ROLLING
         char.double_jump_state = 0        // Allow gliding again
+    }
+    if (no_jump_timer > 0)
+    {
+        CrowdControl.updateNoJumpTimer()
     }
 }
 
@@ -249,16 +254,16 @@ function void UpdateKnucklesGlideCollision()
                             camera.hyper_knux_shake = 0x14
                             Character.ClearEnemiesOnScreen()
                             playSound(0x49)
-                        #if STANDALONE
+                            #if STANDALONE
                             Input.setControllerRumbleByAddress(A0, 0.5f, 1.0f, 200)
-                        #endif
+                            #endif
                         }
                         else
                         {
                             playSound(SFX_GRAB)
-                        #if STANDALONE
+                            #if STANDALONE
                             Input.setControllerRumbleByAddress(A0, 0.5f, 0.0f, 200)
-                        #endif
+                            #endif
                         }
 
                         char.groundspeed = 0
@@ -271,7 +276,7 @@ function void UpdateKnucklesGlideCollision()
                         knuckles.glide_direction = 3
                         char.position.x.frac = char.position.x.u16
 
-                    #if STANDALONE
+                        #if STANDALONE
                         // Prevent Knuckles from climbing above the screen limits
                         //  -> This same check is down while climbing up/down, but we do it here to correct the position right away
                         //  -> This is added for S3AIR specifically because it's now much easier to get outside the screen after we removed the stopping effect when gliding the the top of screen (see "UpdateKnucklesGlide")
@@ -283,7 +288,7 @@ function void UpdateKnucklesGlideCollision()
                                 char.position.y.u16 = minY
                             }
                         }
-                    #endif
+                        #endif
                         return
                     }
                 }
@@ -314,7 +319,7 @@ function void UpdateKnucklesGlideCollision()
                 char.hitbox_extends.x = char.hitbox.default.x
                 char.hitbox_extends.y = char.hitbox.default.y
 
-            #if STANDALONE
+                #if STANDALONE
                 // Perform a ground collision check after updating the hitbox height
                 //  -> This prevents getting killed when Knuckles stops gliding just above the floor and there's a blocker object right underneath
                 Character.CheckFloorCollision()
@@ -322,7 +327,7 @@ function void UpdateKnucklesGlideCollision()
                 {
                     char.position.y.u16 += global.inv_gravity ? -D1.s16 : D1.s16
                 }
-            #endif
+                #endif
             }
         }
         else
@@ -415,9 +420,9 @@ function void UpdateKnucklesGlideCollision()
                 {
                     playSound(0x7e)
                 }
-            #if STANDALONE
+                #if STANDALONE
                 Input.setControllerRumbleByAddress(A0, 0.2f, 0.2f, 100)
-            #endif
+                #endif
             }
             else
             {

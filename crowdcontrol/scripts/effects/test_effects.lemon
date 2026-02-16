@@ -1,0 +1,76 @@
+/* -----------------------------------------------------------------
+Test Rig, hold R to bring up "menu" up/down to navigate and 
+Y (top face button) to activate
+-------------------------------------------------------------------- */
+
+#define test_rig_active = false
+#if test_rig_active
+global u32 effectIndex = 0
+global bool effectSelect = false
+
+constant array<string> CrowdControl_Timer_Effect_DisplayNames = 
+{
+    "Invert Controls", 
+    "Random Gravity", 
+    "Partner Bumper",
+    "Earthquake",
+    "No Air Ability",
+    "Big Arms",
+    "Disable Jump",
+    "Mephiles Hunt",
+    "Chao"
+}
+
+constant array<string> CrowdControl_Timer_Effect_Names = 
+{
+    "InvertControls", 
+    "Gravity", 
+    "PartnerBumper",
+    "Earthquake",
+    "NoJumpAbility",
+    "BigArms",
+    "NoJump",
+    "Mephiles",
+    "SpawnChao"
+}
+
+//# address-hook(0x00db44) end(0x00dbb2)
+function void RenderHUD()
+{
+    if (Input.buttonDown(BUTTON_R))
+    {
+
+        effectSelect	= true
+    }
+    else
+    {
+        effectSelect = false
+    }
+
+    if (effectSelect && Input.buttonPressed(BUTTON_DOWN))
+    {
+        effectIndex = (effectIndex+1) % CrowdControl_Timer_Effect_Names.length()
+    }
+
+    if (effectSelect && Input.buttonPressed(BUTTON_UP))
+    {
+        if (effectIndex == 0) 
+            effectIndex = CrowdControl_Timer_Effect_Names.length() -1
+        else
+            effectIndex -= 1
+    }
+    if (effectSelect && Input.buttonPressed(BUTTON_Y))
+    {
+        CrowdControl.triggerEffect(-1, CrowdControl_Timer_Effect_Names[effectIndex], 1, 10 * 1000)
+    }
+
+    if(effectSelect && effectIndex < CrowdControl_Timer_Effect_Names.length())
+    {
+
+        s16 px = s16(u16[0xffffb000 + 0x10] - camera.position.x.u16)
+        s16 py = s16(u16[0xffffb000 + 0x14] - camera.position.y.u16)
+        Renderer.drawText("smallfont", px, py- 40, CrowdControl_Timer_Effect_DisplayNames[effectIndex], 0xfefefeff, 1, s8(0), 0xe000, false)
+    }
+    base.RenderHUD()
+}
+#endif

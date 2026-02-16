@@ -1,6 +1,5 @@
 {
-	"Metadata":
-	{
+	"Metadata": {
 		"Name": "CrowdControl",
 		"UniqueID": "club601-crowdcontrol",
 		"Author": "Club601",
@@ -9,8 +8,14 @@
 		"ModVersion": "1.0.0.0",
 		"GameVersion": "24.02.02.1"
 	},
-	"UsesFeatures":
-	{
+	"UsesFeatures": {
 		"CrowdControl": true
+	},
+	"OtherMods": {
+		"Mephiles' Hunt": {
+			"DisplayName": "Mephiles' Hunt",
+			"IsRequired": "0",
+			"Priority": "Lower"
+		}
 	}
 }
