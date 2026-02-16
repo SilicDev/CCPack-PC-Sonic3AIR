@@ -137,395 +137,66 @@ function void CompetitionMode.Character.UpdateRollingInAir.Tails()
     popA456()
 }
 
-// If this was a function split into multiple components, I wouldn't have to overwrite it like this
-// alas, let's pray it doesn't break any character mods
+global s16 knuckles_glide_collision_vY
+
 //# address-hook(0x016890) end(0x016c78)
 //# translated(0x016f6c) end(0x016fa6)
 function void UpdateKnucklesGlideCollision()
 {
-    if (char.double_jump_state == 0)
-        return
+    // capture knuckles vY before execution
+    knuckles_glide_collision_vY = char.velocity.y 
+    base.UpdateKnucklesGlideCollision()
+}
 
-    D0.u8 = char.double_jump_state
-    if (char.double_jump_state == 1 || char.double_jump_state > 5)    // Last check is probably not needed, just added for full compatibility
+// this function is called from 3 points from inside UpdateKnucklesGlideCollision()
+// however only one of those points should happen after a vY change
+// and it happens immediatel after so we check if velocity has changed 
+// and if it has, undo it and apply our own gravity logic then the function
+// will continue as normal, with the modified gravity
+//# address-hook(0x01793e) end(0x017b16)
+function void fn01793e()
+{
+    if (char.velocity.y != knuckles_glide_collision_vY)
     {
-        // Gliding/Climbing state
-        fn01793e()
-        if (knuckles.glideclimbstate & 0x02)    // Gliding?
-        {
-            if (knuckles.glideclimbstate & 0x20)    // Climbing?
-            {
-                if ((knuckles.preventclimbing & 0x80) == 0)
-                {
-                    bool hit_wall = true
-                    D5.u8 = char.layer_flags2
-                    D0.u8 = knuckles.glide_direction + 0x40
-                    if (D0.s8 < 0)
-                    {
-                        char.flags |= char.flag.FACING_LEFT
-                        CheckHitboxCollisionLeft()
-
-                        D1.u16 |= D0.u16
-                        if (D1.u16 != 0)
-                        {
-                            D3.u16 = char.position.x.u16 - s8(char.hitbox_extends.y) - 1
-
-                            if (global.inv_gravity == 0)
-                            {
-                                D2.u16 = char.position.y.u16 - 11
-                                Character.checkFloorEdgeCollisionFixedY()
-                                if (D1.s16 < 0 || D1.u16 >= 12)
-                                {
-                                    hit_wall = false
-                                }
-                                else
-                                {
-                                    char.position.y.u16 += D1.u16
-                                }
-                            }
-                            else
-                            {
-                                D2.u16 = (char.position.y.u16 + 11) ^ 0x0f
-                                Character.checkCeilingEdgeCollisionFixedY()
-                                if (D1.s16 < 0 || D1.u16 >= 12)
-                                {
-                                    hit_wall = false
-                                }
-                                else
-                                {
-                                    char.position.y.u16 -= D1.u16
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ++char.position.x.u16
-                        }
-                    }
-                    else
-                    {
-                        char.flags &= ~char.flag.FACING_LEFT
-                        CheckHitboxCollisionRight()
-
-                        D1.u16 |= D0.u16
-                        if (D1.u16 != 0)
-                        {
-                            D3.u16 = char.position.x.u16 + s8(char.hitbox_extends.y) + 1
-
-                            if (global.inv_gravity == 0)
-                            {
-                                D2.u16 = char.position.y.u16 - 11
-                                Character.checkFloorEdgeCollisionFixedY()
-                                if (D1.s16 < 0 || D1.u16 >= 12)
-                                {
-                                    hit_wall = false
-                                }
-                                else
-                                {
-                                    char.position.y.u16 += D1.u16
-                                }
-                            }
-                            else
-                            {
-                                D2.u16 = (char.position.y.u16 + 11) ^ 0x0f
-                                Character.checkCeilingEdgeCollisionFixedY()
-                                if (D1.s16 < 0 || D1.u16 >= 12)
-                                {
-                                    hit_wall = false
-                                }
-                                else
-                                {
-                                    char.position.y.u16 -= D1.u16
-                                }
-                            }
-                        }
-                    }
-
-                    if (hit_wall)
-                    {
-                        // When Hyper Knuckles hits a wall fast enough, that kills all badniks on screen
-                        if ((super.active & 0x80) && u16(char.groundspeed) >= 0x480)
-                        {
-                            camera.hyper_knux_shake = 0x14
-                            Character.ClearEnemiesOnScreen()
-                            playSound(0x49)
-                        #if STANDALONE
-                            Input.setControllerRumbleByAddress(A0, 0.5f, 1.0f, 200)
-                        #endif
-                        }
-                        else
-                        {
-                            playSound(SFX_GRAB)
-                        #if STANDALONE
-                            Input.setControllerRumbleByAddress(A0, 0.5f, 0.0f, 200)
-                        #endif
-                        }
-
-                        char.groundspeed = 0
-                        char.velocity.x = 0
-                        char.velocity.y = 0
-                        char.double_jump_state = 4        // Knuckles climbing state
-                        char.animation.sprite = 0xb7
-                        char.animation.timer = 0x7f
-                        char.animation.frame = 0
-                        knuckles.glide_direction = 3
-                        char.position.x.frac = char.position.x.u16
-
-                    #if STANDALONE
-                        // Prevent Knuckles from climbing above the screen limits
-                        //  -> This same check is down while climbing up/down, but we do it here to correct the position right away
-                        //  -> This is added for S3AIR specifically because it's now much easier to get outside the screen after we removed the stopping effect when gliding the the top of screen (see "UpdateKnucklesGlide")
-                        if (level.vertical_wrap != 0xff00)
-                        {
-                            s16 minY = level.vertical_wrap + 0x10
-                            if (s16(char.position.y.u16) < minY)
-                            {
-                                char.position.y.u16 = minY
-                            }
-                        }
-                    #endif
-                        return
-                    }
-                }
-
-                char.double_jump_state = 2        // Knuckles glide drop state
-                char.state = char.state.KNUX_FALLING
-                char.hitbox_extends.x = char.hitbox.default.x
-                char.hitbox_extends.y = char.hitbox.default.y
-                knuckles.glideclimbstate |= 0x02
-                return
-            }
-
-            if (control.player1.state & CONTROL_ABC && no_jump_ability_timer == 0)
-            {
-                fn016fa8()
-            }
-            else
-            {
-                // Stop gliding
-                char.double_jump_state = 2        // Knuckles glide drop state
-                char.state = char.state.KNUX_FALLING
-                if (char.velocity.x < 0)
-                    char.flags |= char.flag.FACING_LEFT
-                else
-                    char.flags &= ~char.flag.FACING_LEFT
-
-                char.velocity.x >>= 2
-                char.hitbox_extends.x = char.hitbox.default.x
-                char.hitbox_extends.y = char.hitbox.default.y
-
-            #if STANDALONE
-                // Perform a ground collision check after updating the hitbox height
-                //  -> This prevents getting killed when Knuckles stops gliding just above the floor and there's a blocker object right underneath
-                Character.CheckFloorCollision()
-                if (D1.s16 < 0)
-                {
-                    char.position.y.u16 += global.inv_gravity ? -D1.s16 : D1.s16
-                }
-            #endif
-            }
-        }
-        else
-        {
-            if (char.velocity.x < 0)
-                char.flags |= char.flag.FACING_LEFT
-            else
-                char.flags &= ~char.flag.FACING_LEFT
-
-            D0.u8 = (char.rotation + 0x20) & 0xc0
-            if (D0.u8 != 0)
-            {
-                char.velocity.x = char.groundspeed
-                char.velocity.y = 0
-                Character.LandingOnGroundNoSpindash()
-            }
-            else
-            {
-                char.double_jump_state = 3        // Knuckles ground slide state
-                char.animation.sprite = 0xcc
-                char.animation.timer = 0x7f
-                char.animation.frame = 0
-                if (char.drown_countdown >= 12)
-                {
-                    u8[A6 + 0x05] = 0x06        // Base update for braking dust
-                    u8[A6 + 0x22] = 0x15        // First frame of dust animation
-                }
-            }
-        }
-    }
-    else if (char.double_jump_state == 2)
-    {
-        // Falling state
-        Character.UpdateControlInAir()
-
-        // Gravity
+        debugLog(stringformat("%d pre %d", knuckles_glide_collision_vY, char.velocity.y))
         u16 gravity = (char.flags & char.flag.UNDERWATER) ? 0x10 : 0x38
-        char.velocity.y += CrowdControl.calculateGravity(gravity)
-
-        fn01793e()
-        if ((knuckles.glideclimbstate & 0x02) == 0)
-        {
-            char.groundspeed = 0
-            char.velocity.x = 0
-            char.velocity.y = 0
-            s16 dy = s8(char.hitbox_extends.y - char.hitbox.default.y)
-            char.position.y.u16 += global.inv_gravity ? -dy : dy
-            playSound(0x4c)
-
-            D0.u8 = (char.rotation + 0x20) & 0xc0
-            if (D0.u8 != 0)
-            {
-                Character.LandingOnGroundNoSpindash()
-            }
-            else
-            {
-                Character.LandingOnGroundNoSpindash()
-                char.hlock_countdown = 15
-                char.state = char.state.KNUX_STANDUP2
-            }
-        }
+        char.velocity.y = knuckles_glide_collision_vY + CrowdControl.calculateGravity(gravity)
+        debugLog(stringformat("%d post %d",knuckles_glide_collision_vY, char.velocity.y))
     }
-    else if (char.double_jump_state == 3)
-    {
-        // Touched ground while gliding
-        bool goto016b64 = false
-        if (control.player1.state & CONTROL_ABC)
-        {
-            if (char.velocity.x < 0)
-            {
-                char.velocity.x += 0x20
-                goto016b64 = (char.velocity.x < 0)
-            }
-            else
-            {
-                char.velocity.x -= 0x20
-                goto016b64 = (char.velocity.x >= 0)
-            }
-        }
+    base.fn01793e()
+}
 
-        if (goto016b64)
-        {
-            fn01793e()
-            Character.CheckFloorCollision()
-            if (D1.s16 < 0x0e)
-            {
-                char.position.y.u16 += global.inv_gravity ? -D1.s16 : D1.s16
-                char.rotation = D3.u8
-                if ((level.framecounter.low & 0x07) == 0)
-                {
-                    playSound(0x7e)
-                }
-            #if STANDALONE
-                Input.setControllerRumbleByAddress(A0, 0.2f, 0.2f, 100)
-            #endif
-            }
-            else
-            {
-                char.double_jump_state = 2        // Knuckles glide drop state
-                char.state = char.state.KNUX_FALLING
-                char.hitbox_extends.x = char.hitbox.default.x
-                char.hitbox_extends.y = char.hitbox.default.y
-                knuckles.glideclimbstate |= 0x02
-            }
-        }
+// updates knuckles when still gliding
+//# address-hook(0x016fa8) end(0x016fec)
+function void fn016fa8()
+{
+    // if we are disabling jumb abilities then mimic the code that removes
+    // knuckles glide state
+    if (no_jump_ability_timer > 0)
+    {
+        // base code section to enter drop state
+        // Stop gliding
+        char.double_jump_state = 2        // Knuckles glide drop state
+        char.state = char.state.KNUX_FALLING
+        if (char.velocity.x < 0)
+            char.flags |= char.flag.FACING_LEFT
         else
-        {
-            char.groundspeed = 0
-            char.velocity.x = 0
-            char.velocity.y = 0
-            s16 dy = s8(char.hitbox_extends.y - char.hitbox.default.y)
-            char.position.y.u16 += global.inv_gravity ? -dy : dy
-            Character.LandingOnGroundNoSpindash()
-            char.hlock_countdown = 15
-            char.state = char.state.KNUX_STANDUP
-        }
-    }
-    else if (char.double_jump_state == 4)
-    {
-        // Climbing state
-        if (knuckles.preventclimbing & 0x80 || char.position.x.u16 != char.position.x.frac || (char.flags & char.flag.ON_OBJECT))
-        {
-            fn016ed2()
-            return
-        }
+            char.flags &= ~char.flag.FACING_LEFT
 
-        char.groundspeed = 0
-        char.velocity.x = 0
-        char.velocity.y = 0
-        u32[0xfffff796] = (char.layer_flags2 == 0x0d) ? u32[0xfffff7b4] : u32[0xfffff7b8]
-        D5.u8 = char.layer_flags2
-        D1 = 0
+        char.velocity.x >>= 2
+        char.hitbox_extends.x = char.hitbox.default.x
+        char.hitbox_extends.y = char.hitbox.default.y
 
-        if ((control.player1.state & CONTROL_UP) == 0)
-        {
-            fn016d10()
-            return
-        }
-
-        // Knuckles climbing up
-        if (global.inv_gravity)
-        {
-            fn016da8()
-            return
-        }
-
-        D2.u16 = char.position.y.u16 - 11
-        fn016f4e()
-        if (D1.s16 >= 4)
-        {
-            fn016eba()
-            return
-        }
-
-        if (D1.u16 != 0)
-        {
-            fn016e60()
-        }
-
-        D5.u8 = char.layer_flags2
-        D2.u16 = char.position.y.u16 - 8
-        D3.u16 = char.position.x.u16
-        fn00fbee()
+        #if STANDALONE
+        // Perform a ground collision check after updating the hitbox height
+        //  -> This prevents getting killed when Knuckles stops gliding just above the floor and there's a blocker object right underneath
+        Character.CheckFloorCollision()
         if (D1.s16 < 0)
         {
-            char.position.y.u16 -= D1.u16
-            D1 = 1
+            char.position.y.u16 += global.inv_gravity ? -D1.s16 : D1.s16
         }
-        else
-        {
-            --char.position.y.u16
-            if (super.active)
-                --char.position.y.u16
-
-            D1 = 1
-            if (level.vertical_wrap != 0xff00)
-            {
-                s16 minY = level.vertical_wrap + 0x10
-                if (s16(char.position.y.u16) < minY)
-                {
-                    char.position.y.u16 = minY
-                }
-            }
-        }
-        fn016e10()
+        #endif
+        return
     }
-    else if (char.double_jump_state == 5)
-    {
-        // Climbing up a ledge
-        if (char.animation.timer == 0)
-        {
-            fn016efe()
-            if (knuckles.glide_direction == 0x10)
-            {
-                char.groundspeed = 0
-                char.velocity.x = 0
-                char.velocity.y = 0
-                if (char.flags & char.flag.FACING_LEFT)
-                    --char.position.x.u16
-
-                Character.LandingOnGroundNoSpindash()
-                char.state = char.state.STANDING
-            }
-        }
-    }
+    base.fn016fa8()
 }
