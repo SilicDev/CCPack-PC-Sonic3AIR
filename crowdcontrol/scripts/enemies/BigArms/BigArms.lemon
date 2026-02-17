@@ -108,7 +108,7 @@ function void BigArms.MainUpdate()
     {
         BigArms.SlamEscape()
     }
-    
+
     if (BigArms.Timer == 0 && objA0.base_state < 0x1e)
     {
         // unload all children
@@ -132,7 +132,9 @@ function void BigArms.Init()
     objA0.position.y.u16 = camera.position.y.u16 - 0x50
     objA0.countdown_value = 0x59
     objA0.countdown_callback = makeCallable(BigArms.SpawnParts)
-    BigArms.Timer = 30 * 60
+
+    BIG_ARMS_DURATION = 30 * 60
+    BigArms.Timer = BIG_ARMS_DURATION
 
     //loadPaletteLine1(0x0751aa)
 
@@ -457,27 +459,27 @@ function void BigArms.HurtPlayer()
 
     /*if (u8[0xffffb000 + 0x2b] & char.bonus.INVINCIBLE)
     {
-        // Handling primarily for Super forms
-        A1 = 0xffffb000
-        u8[A1 + 0x05] = base_state.NORMAL
-        objA1.velocity.x = -objA0.velocity.x
-        objA1.velocity.y = -0x400
-        objA1.state = char.state.ROLLING
-        objA1.flags2a |= char.flag.IN_AIR
-        objA1.flags2a &= ~char.flag.ON_OBJECT
-        u8[A1 + 0x2e] = 0
-        u8[A1 + 0x3d] = 0
-        u8[A1 + 0x40] = 0
+    // Handling primarily for Super forms
+    A1 = 0xffffb000
+    u8[A1 + 0x05] = base_state.NORMAL
+    objA1.velocity.x = -objA0.velocity.x
+    objA1.velocity.y = -0x400
+    objA1.state = char.state.ROLLING
+    objA1.flags2a |= char.flag.IN_AIR
+    objA1.flags2a &= ~char.flag.ON_OBJECT
+    u8[A1 + 0x2e] = 0
+    u8[A1 + 0x3d] = 0
+    u8[A1 + 0x40] = 0
 
-        playSound(SFX_SPRING)
-    }
+    playSound(SFX_SPRING)
+}
     else
     {
-        A2 = A0
-        A0 = 0xffffb000
-        Character.GettingHurt()
-        A0 = A2
-    }*/
+    A2 = A0
+    A0 = 0xffffb000
+    Character.GettingHurt()
+    A0 = A2
+}*/
     A2 = A0
     A0 = 0xffffb000
     Character.Die_noSound()
@@ -515,7 +517,7 @@ function void BigArms.Arm.MainUpdate()
     {
         BigArms.Arm.Update()
     }
-    
+
 
     D0 = 0x0c
     fn084a04()
@@ -884,7 +886,7 @@ function void BigArms.CheckDead()
             u8[A1 + 0x2c] = 0x04
         }
 
-    #if !STANDALONE
+        #if !STANDALONE
         // This resets the character state, but is unnecessary, #contributed by TheMushrunt
         if (u8[A0 + 0x30] == 0)
         {
@@ -894,7 +896,7 @@ function void BigArms.CheckDead()
         // This object looks broken and is unnecessary, so leave it out in S3AIR, fix #contributed by Legobouwer
         // "spawnChildObjects(0x075186)" replaced by:
         spawnChildObject(0x074e12, 0x00, 0, 16)
-    #else
+        #else
         // Release main character if he was grabbed (can happen if second character makes the final hit)
         if (u8[0xffffb000 + 0x2e] & (control_flag.DISABLE_INTERACTION | control_flag.DISABLE_UPDATE))
             u8[0xffffb000 + 0x2e] &= ~(control_flag.DISABLE_INTERACTION | control_flag.DISABLE_UPDATE)
@@ -905,7 +907,7 @@ function void BigArms.CheckDead()
             // Change in standalone: No music fade-out to (very brief) level music before level results
             objA0.update_address = 0x08566a
         }
-    #endif
+        #endif
         return
     }
 

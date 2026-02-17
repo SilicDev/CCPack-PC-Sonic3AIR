@@ -1,0 +1,28 @@
+function float getR(u32 rgba)
+{
+    return float((rgba >> 24) & 0xff) / 255.0f
+}
+
+function float getG(u32 rgba)
+{
+    return float((rgba >> 16) & 0xff) / 255.0f
+}
+
+function float getB(u32 rgba)
+{
+    return float((rgba >> 8) & 0xff) / 255.0f
+}
+
+function u8 CrowdControl_TIMER_HUD.getFilledLozenges(u16 max, u16 remaining, u16 barSize)
+{
+    if (max == 0)
+        return 0
+
+    if (remaining >max)
+        remaining = max
+
+    u32 filled = (u32(remaining) * barSize) / u32(max)
+
+    return u8(filled >barSize ? barSize : filled)
+
+}

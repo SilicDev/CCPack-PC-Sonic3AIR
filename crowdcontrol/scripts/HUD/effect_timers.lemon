@@ -1,0 +1,68 @@
+
+constant u8 CrowdControl_TIMER_HUD.maxLozenges = 39
+constant u8 CrowdControl_TIMER_HUD.rowHeight = 8
+
+//# address-hook(0x00db44) end(0x00dbb2)
+function void RenderHUD()
+{
+    u16 rq = 0xe000
+    u16 px = getScreenWidth() - 50
+    u16 textX = getScreenWidth() - 110
+    u16 py = 3 + CrowdControl_TIMER_HUD.rowHeight
+
+    u16 startPy = py
+
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Big Arms", BIG_ARMS_DURATION, BigArms.Timer, BIG_ARMS_COLOR)
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Earthquake", EARTHQUAKE_DURATION, earthquake_timer, EARTHQUAKE_COLOR)
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Partner Bumper", PARTNER_BUMPER_DURATION, partnerBumper_timer, PARTNER_COLOR)
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Random Gravity", GRAVITY_SWAP_DURATION, gravity_timer, GRAVITY_COLOR)
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Invert Controls", INVERT_DIRECTIONS_DURATION, invert_directions_timer, INVERT_COLOR)
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "No Air Ability", NO_JUMP_ABILITY_DURATION, no_jump_ability_timer, NO_JUMP_COLOR)
+
+    // If no rows were drawn, py will equal startPy
+    if (py != startPy)
+    {
+        // Move rows down to make space for header
+        u16 headerPy = startPy - CrowdControl_TIMER_HUD.rowHeight
+        SpriteHandle back = Renderer.addSpriteHandle("CrowdControl_effects_timer_bar_background", textX - 1, headerPy, rq++)
+        back.setOpacity(0.7f)
+        back.setPriorityFlag(true)
+
+        Renderer.drawText("smallfont", textX, headerPy + 1, "Active Effects:", 0xfefefeff, 1, s8(0), rq++, false)
+    }
+
+    base.RenderHUD()
+}
+
+function u16 CrowdControl_TIMER_HUD.tryDrawTimerRow(u16 textX, u16 barX, u16 py, u16 rq, string label, u32 maxTicks, u32 ticksLeft, u32 color)
+{
+    if (ticksLeft == 0)
+        return 0
+
+    SpriteHandle back = Renderer.addSpriteHandle("CrowdControl_effects_timer_bar_background", textX - 1, py, rq)
+    back.setOpacity(0.7f)
+    back.setPriorityFlag(true)
+
+    Renderer.drawText("smallfont", textX, py + 1, label, color, 1, s8(0), rq +1, false)
+
+    SpriteHandle bar = Renderer.addSpriteHandle("CrowdControl_effects_timer_bar", barX + 3, py + 1, rq + 2)
+    bar.setPriorityFlag(true)
+
+    CrowdControl_TIMER_HUD.fllTimerBar(barX + 5, py + 3, maxTicks, ticksLeft, color, rq + 3)
+
+    return CrowdControl_TIMER_HUD.rowHeight
+}
+
+
+function void CrowdControl_TIMER_HUD.fllTimerBar(s16 px, s16 py, u16 max, u16 remaining, u32 color,  u16 renderQueue)
+{
+    u8 lozenges = CrowdControl_TIMER_HUD.getFilledLozenges(max, remaining, CrowdControl_TIMER_HUD.maxLozenges)
+
+    for (u8 i = 0; i < lozenges; i++)
+    {
+        SpriteHandle loz = Renderer.addSpriteHandle("CrowdControl_effects_timer_bar_lozenge", px+i, py, renderQueue)
+
+        loz.setAddedColor(getR(color), getG(color), getB(color))
+        loz.setPriorityFlag(true)
+    }
+}
