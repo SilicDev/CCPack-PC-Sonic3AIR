@@ -1,0 +1,14 @@
+    {
+        "CrowdControl_effects_timer_bar": {
+            "File": "HUD/cc_effect_timebar.png",
+            "Rect": "0,0,43,6"
+        },
+        "CrowdControl_effects_timer_bar_lozenge": {
+            "File": "HUD/cc_effect_timebar.png",
+            "Rect": "1,1,1,2"
+        },
+        "CrowdControl_effects_timer_bar_background": {
+            "File": "HUD/cc_effect_background.png",
+            "Rect": "0,0,110,8"
+        }
+    }
