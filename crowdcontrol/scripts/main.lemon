@@ -10,6 +10,9 @@ include fixes
 include character_modification
 include define_constants
 include HUD
+include effects/?
+include HUD/?
+
 
 global bool blue_spheres_jail = false
 
@@ -35,6 +38,7 @@ global u32 partnerBumper_id = 0
 global u32 gravity_timer = 0
 global u32 gravity_id = 0
 global u32 gravity_swap_timer = 0
+
 constant array<u16> gravity_values =
 {
     1, 2, 512, 1024,
@@ -222,7 +226,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     if (code == "AddRing")
     {
         addRings(quantity)
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -235,7 +239,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         }
         D0 = -quantity
         AddRings()
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -245,7 +249,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         A0 = 0xffffb000
         CrowdControl.SwapToSonic()
         A0 = ABackUp
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -255,7 +259,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         A0 = 0xffffb000
         CrowdControl.SwapToTails()
         A0 = ABackUp
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -265,7 +269,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         A0 = 0xffffb000
         CrowdControl.SwapToKnuckles()
         A0 = ABackUp
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -275,7 +279,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         A1 = 0xffffb000
         ItemEffect.ApplyShieldFire()
         A1 = ABackUp
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -285,7 +289,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         A1 = 0xffffb000
         ItemEffect.ApplyShieldBubble()
         A1 = ABackUp
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -295,7 +299,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         A1 = 0xffffb000
         ItemEffect.ApplyShieldLightning()
         A1 = ABackUp
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -305,7 +309,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         A1 = 0xffffb000
         ItemEffect.applyShield(0, addressof(InstaShield.Init), SFX_CLASSICSHIELD)
         A1 = ABackUp
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -334,11 +338,11 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             u16[A1 + 0x2e] = 600
             objA1.countdown_callback = addressof(UnloadObject)
             A0 = ABackUp
-        
+
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
         return
     }
@@ -369,7 +373,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             u16[A1 + 0x2e] = 600
             objA1.countdown_callback = addressof(UnloadObject)
             A0 = ABackUp
-        
+
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
@@ -449,7 +453,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
             return
         }
-        
+
         fn01bb7e()
         fn02d1cc()
         global.stage_type = 1
@@ -463,7 +467,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         global.game_mode = GAME_MODE_SPECIAL_STAGE
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
-        
+
     }
     if (code == "Asteron")
     {
@@ -501,7 +505,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         {
             global.chaos_emeralds = 7
         }
-        
+
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -636,8 +640,9 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             return
         }
         invert_directions_id = id
-        
-        invert_directions_timer = duration / 1000 * 60
+
+        INVERT_DIRECTIONS_DURATION = duration / 1000 * 60
+        invert_directions_timer = INVERT_DIRECTIONS_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -665,9 +670,10 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             return
         }
         no_jump_id = id
-        
-        no_jump_timer = duration / 1000 * 60
-        debugLog(no_jump_timer)
+
+        //TODO remove cc duration??
+        NO_JUMP_DURATION = duration / 1000 * 60
+        no_jump_timer = NO_JUMP_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -679,8 +685,9 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             return
         }
         no_jump_ability_id = id
-        
-        no_jump_ability_timer = duration / 1000 * 60
+
+        NO_JUMP_ABILITY_DURATION = duration / 1000 * 60
+        no_jump_ability_timer = NO_JUMP_ABILITY_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -693,8 +700,9 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         }
         earthquake_id = id
         earthquake_spawn_timer = 10
-        
-        earthquake_timer = duration / 1000 * 60
+
+        EARTHQUAKE_DURATION = duration / 1000 * 60
+        earthquake_timer = EARTHQUAKE_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -706,8 +714,9 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             return
         }
         gravity_id = id
-        
-        gravity_timer = duration / 1000 * 60
+
+        GRAVITY_SWAP_DURATION = duration / 1000 * 60
+        gravity_timer = GRAVITY_SWAP_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -724,7 +733,8 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             return
         }
         partnerBumper_id = id        
-        partnerBumper_timer = duration / 1000 * 60
+        PARTNER_BUMPER_DURATION  = duration / 1000 * 60
+        partnerBumper_timer = PARTNER_BUMPER_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -977,12 +987,12 @@ function void UpdateControllers()
     {
         // The following would be the correct implementation for Oxygen,
         // but we don't do that here and rather in "waitForNextFrame" to ensure that controllers get updated each frame
-    /*
+        /*
         control.pad1.state = Input.getController(0)
         control.pad1.pressed = control.pad1.state & ~Input.getControllerPrevious(0)
         control.pad2.state = Input.getController(1)
         control.pad2.pressed = control.pad2.state & ~Input.getControllerPrevious(1)
-    */
+        */
     }
     #else
     {
@@ -1018,7 +1028,8 @@ function void UpdateControllers()
                 }
                 D1.u8 |= temp
             }
-            else {
+            else
+            {
                 D1.u8 |= u8[A1] & CONTROL_DPAD
             }
 
@@ -1077,7 +1088,7 @@ function void waitForNextFrame()
         }
         control.pad1.state = temp
         control.pad1.pressed = control.pad1.state & ~Input.getControllerPrevious(0)
-        
+
         temp = control.pad2.state & (CONTROL_ABC | CONTROL_START)
         if (control.pad2.state & CONTROL_UP)
         {
@@ -1137,7 +1148,7 @@ function void CrowdControl.SlapPlayer()
         // Reset drop dash
         sonic.dropdash_counter = 0
     }
-    
+
     A0 = ABackUp
 }
 
@@ -1156,7 +1167,7 @@ function void CrowdControl.SpawnEarthQuakeObject()
         if (temp < 0x3)
         {
             objA1.subtype2c = 0x1
-        } 
+        }
         else
         {
             objA1.collision_attributes = (collision.flag.THREAT | collision.size.12x20)
@@ -1224,7 +1235,7 @@ function void unloadChildrenAt(u32 update_address, bool recursive)
 global u8 partnerBumper_cooldown = 0
 function void CrowdControl.partnerBumper()
 {
-    
+
     if (global.game_mode != GAME_MODE_MAIN_GAME)
         return
 
@@ -1258,7 +1269,7 @@ function void CrowdControl.partnerBumper()
 
     // determine distance between players
     double deltaX = double(objA1.position.x.u16) - double(objA0.position.x.u16)
-	double deltaY = double(objA1.position.y.u16) - double(objA0.position.y.u16)
+    double deltaY = double(objA1.position.y.u16) - double(objA0.position.y.u16)
     double delta = Math.sqrt( deltaX*deltaX + deltaY*deltaY )
 
     // check bounce range
@@ -1280,9 +1291,9 @@ function void CrowdControl.partnerBumper()
         objA1.velocity.y = Math.roundToInt(deltaY)
 
         objA0.flags2a |= char.flag.IN_AIR
-	    objA0.flags2a &= ~char.flag.ON_OBJECT
+        objA0.flags2a &= ~char.flag.ON_OBJECT
         objA1.flags2a |= char.flag.IN_AIR
-	    objA1.flags2a &= ~char.flag.ON_OBJECT
+        objA1.flags2a &= ~char.flag.ON_OBJECT
 
         playSound(0xaa)
 
