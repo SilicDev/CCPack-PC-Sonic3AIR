@@ -13,6 +13,7 @@ function void RenderHUD()
     u16 startPy = py
 
     py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Big Arms", BIG_ARMS_DURATION, BigArms.Timer, BIG_ARMS_COLOR)
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Mephiles Hunt", MEPH_HUNT_DURATION, MEPHILES.timer, MEPH_COLOR)
     py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Earthquake", EARTHQUAKE_DURATION, earthquake_timer, EARTHQUAKE_COLOR)
     py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Partner Bumper", PARTNER_BUMPER_DURATION, partnerBumper_timer, PARTNER_COLOR)
     py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Random Gravity", GRAVITY_SWAP_DURATION, gravity_timer, GRAVITY_COLOR)

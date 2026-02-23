@@ -9,10 +9,10 @@ global u32 MEPH_HUNT_DURATION
 global u32 NO_JUMP_DURATION
 
 // HUD Timer Bar Colours
-constant u32 INVERT_COLOR      = 0x80C0E0ff   // inverty cyan
+constant u32 INVERT_COLOR      = 0x80C0E0ff   // light cyan
 constant u32 GRAVITY_COLOR     = 0xC485F6ff   // gravity is objectively purple
 constant u32 PARTNER_COLOR     = 0xf1af00ff   // Tails colour
 constant u32 EARTHQUAKE_COLOR  = 0xc9c1a7ff   // earthy
-constant u32 NO_JUMP_COLOR     = 0x5ac54fff   // jumpy sort of green
+constant u32 NO_JUMP_COLOR     = 0x5ac54fff   // reuse cyan
 constant u32 BIG_ARMS_COLOR    = 0xff0038ff   // Eggman red
 constant u32 MEPH_COLOR        = 0x7a00ffff   // deep violet
