@@ -39,6 +39,8 @@ global u32 gravity_timer = 0
 global u32 gravity_id = 0
 global u32 gravity_swap_timer = 0
 
+global u32 mephiles_id = 0
+
 constant array<u16> gravity_values =
 {
     1, 2, 512, 1024,
@@ -97,6 +99,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(gravity_id, CCStatusCode.PAUSED, "")
         }
+        if(MEPHILES.timer > 0)
+        {
+            CrowdControl.sendResponse(mephiles_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -125,6 +131,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(gravity_id, CCStatusCode.RESUME, "")
         }
+        if(MEPHILES.timer > 0)
+        {
+            CrowdControl.sendResponse(mephiles_id, CCStatusCode.RESUME, "")
+        }
     }
     if (!CrowdControl.paused)
     {
@@ -138,7 +148,6 @@ function void PreFrameUpdate()
         }
         if (no_jump_timer > 0)
         {
-            no_jump_timer--
             if (no_jump_timer == 0)
             {
                 CrowdControl.sendResponse(no_jump_id, CCStatusCode.FINISHED, "")
@@ -738,6 +747,22 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "Mephiles")
+    {
+        if (!CrowdControl_MEPHILES.isTargetActive()) 
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Mephiles Hunt Mod Not Active")
+            return
+        }
+        if(MEPHILES.timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        mephiles_id = id
+        CrowdControl_MEPHILES.activate(duration / 1000 * 60)
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -800,6 +825,23 @@ function void CrowdControl.SnapTails(u8 character)
             u16[address + 0x30] = 0x0000
         }
     }
+}
+
+function bool CrowdControl.updateNoJumpTimer() 
+{
+    if (control.pad1.pressed & CONTROL_ABC && no_jump_timer != 0)
+    {
+        if (no_jump_timer > 10)
+        {
+            no_jump_timer -= 10
+        }
+        else
+        {
+            no_jump_timer = 0
+        }
+    }
+    return no_jump_timer > 0
+
 }
 
 function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
