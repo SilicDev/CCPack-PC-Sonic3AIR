@@ -12,6 +12,7 @@ include define_constants
 include HUD
 include effects/?
 include HUD/?
+include utils/?
 
 
 global bool blue_spheres_jail = false
@@ -138,7 +139,6 @@ function void PreFrameUpdate()
         }
         if (no_jump_timer > 0)
         {
-            no_jump_timer--
             if (no_jump_timer == 0)
             {
                 CrowdControl.sendResponse(no_jump_id, CCStatusCode.FINISHED, "")
@@ -738,6 +738,20 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
+    if (code == "Chao")
+    {
+        u32 response = CrowdControl_Chao.trySpawn("Viewer")
+        string message = ""
+        if (response == CCStatusCode.RETRY) 
+        {
+            message =  "Chao Limit Reached"
+        }
+        if (response == CCStatusCode.FAILURE) 
+        {
+            message =  "Object Limit Reached"
+        }
+        CrowdControl.sendResponse(id, response, message)
+    }
 
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
@@ -800,6 +814,23 @@ function void CrowdControl.SnapTails(u8 character)
             u16[address + 0x30] = 0x0000
         }
     }
+}
+
+function bool CrowdControl.updateNoJumpTimer() 
+{
+    if (control.pad1.pressed & CONTROL_ABC && no_jump_timer != 0)
+    {
+        if (no_jump_timer > 10)
+        {
+            no_jump_timer -= 10
+        }
+        else
+        {
+            no_jump_timer = 0
+        }
+    }
+    return no_jump_timer > 0
+
 }
 
 function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)

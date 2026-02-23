@@ -1,0 +1,908 @@
+/*
+============================================================
+CROWD CONTROL - CHAO FOLLOWERS
+============================================================
+
+OBJECT FIELD USAGE
+
+value32  : object utils user id marker (2 = Coding Avengers) 
+
+value39  : current mode (CROWD_CONTROL_CHAO_MODE_*)
+value3b  : X jitter offset (signed s8 stored in u8)
+value3a  : Y offset from player (signed s8 stored in u8)
+
+value2f  : temporary state timer (hurt linger etc.)
+value3e  : target object (u16 low half, rebuilt with 0xffff0000)
+value42  : lifetime ticks remaining
+value26  : character index (index into CROWD_CONTROL_CHAO_CHARACTERS array)
+
+name  [add + 0x18]   : u64 username sting
+
+============================================================
+*/
+
+constant string CROWD_CONTROL_CHAO_SPRITE_KEY = "%s_chao_%s_%d"
+
+constant u8 CROWD_CONTROL_CHAO_MODE_CASUAL = 0
+constant u8 CROWD_CONTROL_CHAO_MODE_ZOOM = 1
+constant u8 CROWD_CONTROL_CHAO_MODE_ZOOMIER = 2
+constant u8 CROWD_CONTROL_CHAO_MODE_ANGY = 3
+constant u8 CROWD_CONTROL_CHAO_MODE_PROUD = 4
+constant u8 CROWD_CONTROL_CHAO_MODE_HURT = 5
+constant u8 CROWD_CONTROL_CHAO_MODE_HURT_FALL = 6
+constant u8 CROWD_CONTROL_CHAO_MODE_LEAVE = 7
+
+define objA0.name = u64[A0 + 0x18]
+define objA1.name = u64[A1 + 0x18]
+
+constant array<string> CROWD_CONTROL_CHAO_SPRITE_SET_FOR_MODE =
+{
+    "casual",
+    "zoom",
+    "zoom",
+    "angy",
+    "proud",
+    "hurt",
+    "hurt",
+    "zoom"
+}
+
+constant array<u8> CROWD_CONTROL_CHAO_SPRITE_FRAMES_FOR_MODE =
+{
+    4,
+    4,
+    4,
+    4,
+    1,
+    4,
+    4,
+    4
+}
+
+constant array<string> CROWD_CONTROL_CHAO_CHARACTERS =
+{
+    "amy",
+    "amy",
+    "amy",
+    "sonic",
+    "sonic",
+    "sonic",
+    "tails",
+    "tails",
+    "tails",
+    "knux",
+    "knux",
+    "CBK"
+}
+
+constant u16 CROWD_CONTROL_CHAO_DEFAULT_LIFETIME_TICKS = 900
+constant u16 CROWD_CONTROL_CHAO_HIT_LIFE_PENALTY = 300
+
+constant u16 CROWD_CONTROL_CHAO_TELEPORT_SNAP_DIST = 800
+constant s16 CROWD_CONTROL_CHAO_SNAP_ABOVE_CAM_Y = 24
+
+constant u16 CROWD_CONTROL_CHAO_OFFSCREEN_MARGIN = 48
+
+constant s16 CROWD_CONTROL_CHAO_CASUAL_SPEED = 2
+constant s16 CROWD_CONTROL_CHAO_ZOOM_SPEED = 4
+constant s16 CROWD_CONTROL_CHAO_SUPER_ZOOM_SPEED = 10
+
+constant s16 CROWD_CONTROL_CHAO_LEAVE_SPEED_Y = 4
+constant s16 CROWD_CONTROL_CHAO_HURT_FALL_SPEED_Y = 3
+
+global u8 CrowdControl_Chao.activeCount = 0
+global u8 CrowdControl_Chao.maxActive = 5
+
+// try and keep their hands off each other
+global u8 CrowdControl_Chao.offsetFrame = 0
+global u8 CrowdControl_Chao.offsetCounter = 0
+
+
+function void CrowdControl_Chao.resetCount()
+{
+    CrowdControl_Chao.activeCount = 0
+}
+
+function u32 CrowdControl_Chao.trySpawn(string viewerName)
+{
+    if (CrowdControl_Chao.activeCount >= CrowdControl_Chao.maxActive)
+    {
+        return CCStatusCode.RETRY
+    }
+
+    push(A1)
+
+    if (!allocDynamicObjectStd())
+    {
+        A1 = pop()
+        return CCStatusCode.FAILURE
+    }
+
+    objA1.update_address = 0x060d32
+    objA1.value32 = 2
+
+    CrowdControl_Chao.activeCount += 1
+
+    objA1.render_flags |= render_flag.VISIBLE
+    objA1.render_flags |= render_flag.WORLD
+
+    objA1.animation.timer = 10
+    objA1.animation.sprite = 0
+    objA1.animation.frame = 0
+    objA1.box_size.x = 19
+    objA1.box_size.y = 22
+    objA1.value2f = 0
+    objA1.value3e = 0
+    // random sprite set
+    objA1.value26 =  CrowdControl_ChaoHelper.getSpriteIndexFromName(viewerName)
+    objA1.name = u64(viewerName)
+    objA1.value42 = CROWD_CONTROL_CHAO_DEFAULT_LIFETIME_TICKS
+
+
+    s8 baseY = s8(-18)
+
+    u32 r0 = System.rand()
+    s8 jitterX = s8((r0 % 13) - 6)
+
+    u32 r1 = System.rand()
+    s8 randY = s8((r1 % 41) - 20)
+
+    objA1.value3b = u8(jitterX)
+    objA1.value3a = u8(baseY + randY)
+
+
+    u16 camY = camera.position.y.u16
+    objA1.position.x.u16 = u16[0xffffb000 + 0x10]
+    objA1.position.y.u16 = u16(s16(camY) - s16(CROWD_CONTROL_CHAO_OFFSCREEN_MARGIN))
+    objA1.value39 = CROWD_CONTROL_CHAO_MODE_ZOOMIER
+    objA1.animation.frame = 0
+
+
+    A1 = pop()
+    return CCStatusCode.SUCCESS
+}
+
+function void CrowdControl_Chao.onUnload()
+{
+    if (CrowdControl_Chao.activeCount > 0)
+    {
+        CrowdControl_Chao.activeCount -= 1
+    }
+}
+
+function void CrowdControl_Chao.update()
+{
+    if (objA0.value42 > 0 && objA0.value39 != CROWD_CONTROL_CHAO_MODE_PROUD)
+    {
+        objA0.value42 -= 1
+    }
+
+
+    if (objA0.value42 == 0)
+    {
+        if (objA0.value39 != CROWD_CONTROL_CHAO_MODE_HURT_FALL)
+        {
+            objA0.value39 = CROWD_CONTROL_CHAO_MODE_LEAVE
+            objA0.animation.frame = 0
+        }
+    }
+
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_HURT_FALL)
+    {
+        CrowdControl_ChaoBehaviour.beHurtFall()
+        CrowdControl_ChaoHelper.cleanupAndDraw()
+        return
+    }
+
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_LEAVE)
+    {
+        CrowdControl_ChaoBehaviour.beLeave()
+        CrowdControl_ChaoHelper.cleanupAndDraw()
+        return
+    }
+
+    CrowdControl_ChaoTry.enterHurt()
+
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_HURT)
+    {
+        CrowdControl_ChaoBehaviour.beHurt()
+        CrowdControl_ChaoHelper.cleanupAndDraw()
+        return
+    }
+
+
+    CrowdControl_ChaoTry.enterProud()
+
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_PROUD)
+    {
+        CrowdControl_ChaoHelper.cleanupAndDraw()
+        return
+    }
+
+    CrowdControl_ChaoTry.enterAngy()
+
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_ANGY)
+    {
+        CrowdControl_ChaoBehaviour.beAngy()
+        CrowdControl_ChaoHelper.cleanupAndDraw()
+        return
+    }
+
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_ZOOM || objA0.value39 == CROWD_CONTROL_CHAO_MODE_ZOOMIER)
+    {
+        CrowdControl_ChaoBehaviour.beZoom()
+        CrowdControl_ChaoHelper.cleanupAndDraw()
+        return
+    }
+
+    CrowdControl_ChaoBehaviour.beCasual()
+    CrowdControl_ChaoHelper.cleanupAndDraw()
+}
+
+
+function void CrowdControl_Chao.draw(u16 rq)
+{
+    u8 mode = u8(objA0.value39)
+    u8 frame = objA0.animation.frame
+
+    string setName = CROWD_CONTROL_CHAO_SPRITE_SET_FOR_MODE[mode]
+    string charachterName = CROWD_CONTROL_CHAO_CHARACTERS[objA0.value26]
+    string key = stringformat(CROWD_CONTROL_CHAO_SPRITE_KEY, charachterName, setName, frame)
+
+    s16 tx = s16( objA0.position.x.u16 - camera.position.x.u16)
+    s16 ty = s16(objA0.position.y.u16- camera.position.y.u16) - 15
+
+    Renderer.drawText("smallfont", tx,  ty,stringformat("%s",objA0.name), 0xfefefeff, 8, s8(0), rq, false)
+
+    SpriteHandle spr = Renderer.addSpriteHandle(key, objA0.position.x.u16, objA0.position.y.u16, rq)
+    spr.setFlags(0x20 | 0x40)
+    spr.setFlipX(objA0.render_flags & render_flag.FLIP_X)
+    // apply an underwater tint if we aren't at the start of Hydrocity becasue 
+    // hard coding is fun
+    if (!(global.zone_act.apparent == 0x0100 &&  camera.position.x.u16 < 0x096e && camera.position.y.u16 >= 0x03e0))
+    {
+        float t = CrowdControl_ChaoHelper.getUnderwaterFactor()
+        if (t > 0.0f)
+        {
+            spr.setAddedColor(0.05f * t, 0.2f * t, 0.5f * t)
+        }
+    }
+    spr.setPriorityFlag(GLENTOPHER_PLAYER_INFO_UTIL.player1HasPriority() || objA0.value39 == CROWD_CONTROL_CHAO_MODE_HURT_FALL || objA0.value39 == CROWD_CONTROL_CHAO_MODE_LEAVE)
+}
+
+function void CrowdControl_ChaoBehaviour.beCasual()
+{
+
+    u16 pX = u16[0xffffb000 + 0x10]
+    u16 pY = u16[0xffffb000 + 0x14]
+
+    s16 desiredX = s16(pX) + s16(CrowdControl_ChaoHelper.getBehindOffsetX())
+    s16 desiredY = s16(pY) + s16(CrowdControl_ChaoHelper.getOffsetY())
+
+    s16 sx = s16(objA0.position.x.u16)
+    s16 sy = s16(objA0.position.y.u16)
+
+    s16 dx = desiredX - sx
+    s16 dy = desiredY - sy
+
+    s16 stepX = 0
+    s16 stepY = 0
+
+    if (dx > 0)
+    {
+        stepX = (dx > CROWD_CONTROL_CHAO_CASUAL_SPEED) ? CROWD_CONTROL_CHAO_CASUAL_SPEED : dx
+    }
+    else if (dx < 0)
+    {
+        s16 ndx = -dx
+        stepX = -((ndx > CROWD_CONTROL_CHAO_CASUAL_SPEED) ? CROWD_CONTROL_CHAO_CASUAL_SPEED : ndx)
+    }
+
+    if (dy > 0)
+    {
+        stepY = (dy > CROWD_CONTROL_CHAO_CASUAL_SPEED) ? CROWD_CONTROL_CHAO_CASUAL_SPEED : dy
+    }
+    else if (dy < 0)
+    {
+        s16 ndy = -dy
+        stepY = -((ndy > CROWD_CONTROL_CHAO_CASUAL_SPEED) ? CROWD_CONTROL_CHAO_CASUAL_SPEED : ndy)
+    }
+
+    objA0.position.x.u16 = u16(sx + stepX)
+    objA0.position.y.u16 = u16(sy + stepY)
+
+    if (stepX < 0)
+    {
+        objA0.render_flags &= ~render_flag.FLIP_X
+    }
+    else if (stepX > 0)
+    {
+        objA0.render_flags |= render_flag.FLIP_X
+    }
+
+    if (abs(dx) > 80 || abs(dy) > 48)
+    {
+        objA0.value39 = CROWD_CONTROL_CHAO_MODE_ZOOM
+        objA0.animation.frame = 0
+    }
+}
+
+function void CrowdControl_ChaoBehaviour.beZoom()
+{
+
+    s16 offsetX = CrowdControl_ChaoHelper.getBehindOffsetX()
+    CrowdControl_ChaoHelper.limitDistanceToPlayer(100 + abs(offsetX))
+
+    u16 pX = u16[0xffffb000 + 0x10]
+    u16 pY = u16[0xffffb000 + 0x14]
+
+    s16 targetX = s16(pX) + offsetX
+    s16 targetY = s16(pY) + s16(CrowdControl_ChaoHelper.getOffsetY())
+
+    s16 sx = s16(objA0.position.x.u16)
+    s16 sy = s16(objA0.position.y.u16)
+
+    s16 dx = targetX - sx
+    s16 dy = targetY - sy
+
+    s16 adx = (dx < 0) ? -dx : dx
+    s16 ady = (dy < 0) ? -dy : dy
+
+    s16 maxStep = CROWD_CONTROL_CHAO_ZOOM_SPEED
+
+    if (adx > 200 || ady > 140)
+    {
+        maxStep = CROWD_CONTROL_CHAO_SUPER_ZOOM_SPEED
+        objA0.value39 = CROWD_CONTROL_CHAO_MODE_ZOOMIER
+    }
+    else
+    {
+        if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_ZOOMIER && adx <= 40 && ady <= 24)
+        {
+            objA0.value39 = CROWD_CONTROL_CHAO_MODE_ZOOM
+        }
+    }
+
+    s16 stepX = 0
+    s16 stepY = 0
+
+    if (dx > 0)
+    {
+        stepX = (dx > maxStep) ? maxStep : dx
+    }
+    else if (dx < 0)
+    {
+        s16 ndx = -dx
+        stepX = -((ndx > maxStep) ? maxStep : ndx)
+    }
+
+    if (dy > 0)
+    {
+        stepY = (dy > maxStep) ? maxStep : dy
+    }
+    else if (dy < 0)
+    {
+        s16 ndy = -dy
+        stepY = -((ndy > maxStep) ? maxStep : ndy)
+    }
+
+    objA0.position.x.u16 = u16(sx + stepX)
+    objA0.position.y.u16 = u16(sy + stepY)
+
+    if (stepX < 0)
+    {
+        objA0.render_flags &= ~render_flag.FLIP_X
+    }
+    else if (stepX > 0)
+    {
+        objA0.render_flags |= render_flag.FLIP_X
+    }
+
+    if (adx <= 10 && ady <= 10)
+    {
+        objA0.value39 = CROWD_CONTROL_CHAO_MODE_CASUAL
+        objA0.animation.frame = 0
+    }
+}
+
+function void CrowdControl_ChaoBehaviour.beAngy()
+{
+    u32 target = CrowdControl_ChaoHelper.getTarget()
+
+    if (target == 0)
+    {
+        objA0.value39 = CROWD_CONTROL_CHAO_MODE_CASUAL
+        objA0.animation.frame = 0
+        return
+    }
+
+    push(A1)
+    A1 = target
+
+    if (objA1.update_address == 0)
+    {
+        A1 = pop()
+        CrowdControl_ChaoHelper.clearTarget()
+        objA0.value39 = CROWD_CONTROL_CHAO_MODE_CASUAL
+        objA0.animation.frame = 0
+        return
+    }
+
+    s16 tx = s16(objA1.position.x.u16)
+    s16 ty = s16(objA1.position.y.u16)
+
+    A1 = pop()
+
+    s16 sx = s16(objA0.position.x.u16)
+    s16 sy = s16(objA0.position.y.u16)
+
+    s16 dx = tx - sx
+    s16 dy = ty - sy
+
+    if (abs(dx) <= 8 && abs(dy) <= 8)
+    {
+        bool ok = GLENTOPHER_WORLD_OBJECT_UTILS.applyHit(target)
+
+        if (ok)
+        {
+            CrowdControl_ChaoHelper.applyHitLifetimePenalty()
+        }
+
+        CrowdControl_ChaoHelper.clearTarget()
+
+        if (objA0.value39 != CROWD_CONTROL_CHAO_MODE_HURT_FALL)
+        {
+            objA0.value39 = CROWD_CONTROL_CHAO_MODE_CASUAL
+            objA0.animation.frame = 0
+        }
+
+        return
+    }
+
+    s16 speed = 0x0400
+
+    u16 ax = u16(abs(dx))
+    u16 ay = u16(abs(dy))
+    u16 mag = ax + ay
+
+    if (mag == 0)
+    {
+        return
+    }
+
+    s32 vx = s32(dx) * s32(speed) / s32(mag)
+    s32 vy = s32(dy) * s32(speed) / s32(mag)
+
+
+    objA0.position.x += vx  << 8
+    objA0.position.y += vy << 8
+
+    if (vx < 0)
+    {
+        objA0.render_flags &= ~render_flag.FLIP_X
+    }
+    else if (vx > 0)
+    {
+        objA0.render_flags |= render_flag.FLIP_X
+    }
+}
+
+function void CrowdControl_ChaoBehaviour.beHurt()
+{
+    if (objA0.value2f > 0)
+    {
+        objA0.value2f -= 1
+        return
+    }
+
+    objA0.value39 = CROWD_CONTROL_CHAO_MODE_ZOOM
+    objA0.animation.frame = 0
+}
+
+
+function void CrowdControl_ChaoBehaviour.beLeave()
+{
+    // leave upwards; once offscreen, unload
+    s16 y = s16(objA0.position.y.u16)
+    y = y - CROWD_CONTROL_CHAO_LEAVE_SPEED_Y
+    objA0.position.y.u16 = u16(y)
+
+    if (CrowdControl_ChaoHelper.isOffscreen())
+    {
+        CrowdControl_Chao.onUnload()
+        UnloadObject()
+        return
+    }
+}
+
+function void CrowdControl_ChaoBehaviour.beHurtFall()
+{
+    // fall downwards; once offscreen, unload
+    s16 y = s16(objA0.position.y.u16)
+    y = y + CROWD_CONTROL_CHAO_HURT_FALL_SPEED_Y
+    objA0.position.y.u16 = u16(y)
+
+    if (CrowdControl_ChaoHelper.isOffscreen())
+    {
+        CrowdControl_Chao.onUnload()
+        UnloadObject()
+        return
+    }
+}
+
+// ------------------------------------------------------------
+// TRY ENTER MODES
+// ------------------------------------------------------------
+
+function void CrowdControl_ChaoTry.enterAngy()
+{
+    if (GLENTOPHER_PLAYER_INFO_UTIL.player1IsPosing())
+    {
+        return
+    }
+
+    if (GLENTOPHER_PLAYER_INFO_UTIL.player1IsHurt())
+    {
+        return
+    }
+
+    if (!(objA0.value39 == CROWD_CONTROL_CHAO_MODE_CASUAL || objA0.value39 == CROWD_CONTROL_CHAO_MODE_ZOOM || objA0.value39 == CROWD_CONTROL_CHAO_MODE_ZOOMIER))
+    {
+        return
+    }
+
+    u16 pX = u16[0xffffb000 + 0x10]
+    u16 pY = u16[0xffffb000 + 0x14]
+
+    u32 target = GLENTOPHER_WORLD_OBJECT_UTILS.findClosestHittableObject(pX, pY, 300, 300, true, false)
+
+    if (target == 0)
+    {
+        return
+    }
+
+    objA0.value39 = CROWD_CONTROL_CHAO_MODE_ANGY
+    objA0.animation.frame = 0
+    CrowdControl_ChaoHelper.setTarget(target)
+}
+
+
+function void CrowdControl_ChaoTry.enterHurt()
+{
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_HURT_FALL || objA0.value39 == CROWD_CONTROL_CHAO_MODE_LEAVE)
+        return
+
+    bool hurtNow = GLENTOPHER_PLAYER_INFO_UTIL.player1IsHurt()
+
+    if (hurtNow)
+    {
+        if (objA0.value39 != CROWD_CONTROL_CHAO_MODE_HURT)
+        {
+            objA0.value39 = CROWD_CONTROL_CHAO_MODE_HURT
+            objA0.animation.frame = 0
+        }
+
+        objA0.value2f = 2
+        return
+    }
+
+    if (objA0.value39 != CROWD_CONTROL_CHAO_MODE_HURT)
+        return
+
+    if (objA0.value2f > 0)
+    {
+        objA0.value2f -= 1
+        return
+    }
+
+    objA0.value39 = CROWD_CONTROL_CHAO_MODE_ZOOM
+    objA0.animation.frame = 0
+}
+
+
+
+function void CrowdControl_ChaoTry.enterProud()
+{
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_HURT_FALL || objA0.value39 == CROWD_CONTROL_CHAO_MODE_LEAVE)
+        return
+
+    if (GLENTOPHER_PLAYER_INFO_UTIL.player1IsPosing())
+    {
+        if (objA0.value39 != CROWD_CONTROL_CHAO_MODE_PROUD)
+        {
+            objA0.value39 = CROWD_CONTROL_CHAO_MODE_PROUD
+            objA0.animation.frame = 0
+        }
+        return
+    }
+
+    if (objA0.value39 == CROWD_CONTROL_CHAO_MODE_PROUD)
+    {
+        objA0.value39 = CROWD_CONTROL_CHAO_MODE_CASUAL
+        objA0.animation.frame = 0
+    }
+}
+
+
+function s16 CrowdControl_ChaoHelper.getBehindOffsetX()
+{
+    u8 f = global.framecounter.low
+
+    if (CrowdControl_Chao.offsetFrame != f)
+    {
+        CrowdControl_Chao.offsetFrame = f
+        CrowdControl_Chao.offsetCounter = 0
+    }
+
+    CrowdControl_Chao.offsetCounter += 1
+
+    bool facingLeft = (u8[0xffffb000 + 0x04] & char.flag.FACING_LEFT) != 0
+
+    s16 baseBehind = 15
+
+    s16 spread = s16(CrowdControl_Chao.offsetCounter) * 20
+
+    s16 jitter = s16(s8(objA0.value3b))
+
+    s16 dir = facingLeft ? 1 : -1
+
+    return (dir * (baseBehind + spread)) + jitter
+}
+
+function u16 CrowdControl_ChaoHelper.getSpriteIndexFromName(string viewerName) 
+{
+    if (viewerName.length() > 2 && viewerName.getSubString(0, 3) == CROWD_CONTROL_CHAO_CHARACTERS[CROWD_CONTROL_CHAO_CHARACTERS.length()-1])
+        return CROWD_CONTROL_CHAO_CHARACTERS.length()-1
+    return u8(System.rand() % (CROWD_CONTROL_CHAO_CHARACTERS.length()))
+}
+
+function bool CrowdControl_ChaoHelper.limitDistanceToPlayer(u16 radius)
+{
+    s16 pX = s16(u16[0xffffb000 + 0x10])
+    s16 pY = s16(u16[0xffffb000 + 0x14])
+
+    s16 gX = s16(objA0.position.x.u16)
+    s16 gY = s16(objA0.position.y.u16)
+
+    s16 dx = gX - pX
+    s16 dy = gY - pY
+
+    u16 ax = u16(abs(dx))
+    u16 ay = u16(abs(dy))
+    u16 mag = ax + ay
+
+    if (mag <= radius)
+    {
+        return false
+    }
+
+    if (mag == 0)
+    {
+        objA0.position.x.u16 = u16(pX)
+        objA0.position.y.u16 = u16(pY)
+        return true
+    }
+
+    s32 nx = s32(dx) * s32(radius)
+    s32 ny = s32(dy) * s32(radius)
+
+    s16 clampedX = pX + s16(nx / s32(mag))
+    s16 clampedY = pY + s16(ny / s32(mag))
+
+    objA0.position.x.u16 = u16(clampedX)
+    objA0.position.y.u16 = u16(clampedY)
+
+    return true
+}
+
+
+function void CrowdControl_ChaoHelper.cleanupAndDraw()
+{
+    CrowdControl_ChaoTry.getNearScreen()
+
+    objA0.animation.timer -= 1
+
+    if (objA0.animation.timer <= 0)
+    {
+        objA0.animation.timer = 10
+
+        u8 mode = u8(objA0.value39)
+        u8 frames = CROWD_CONTROL_CHAO_SPRITE_FRAMES_FOR_MODE[mode]
+
+        if (frames == 0)
+        {
+            frames = 1
+        }
+
+        objA0.animation.frame = (objA0.animation.frame + 1) % frames
+    }
+
+    DrawObject()
+}
+
+function void CrowdControl_ChaoHelper.applyHitLifetimePenalty()
+{
+    if (objA0.value42 > CROWD_CONTROL_CHAO_HIT_LIFE_PENALTY)
+    {
+        objA0.value42 = objA0.value42 - CROWD_CONTROL_CHAO_HIT_LIFE_PENALTY
+        return
+    }
+
+    objA0.value42 = 0
+    objA0.value39 = CROWD_CONTROL_CHAO_MODE_HURT_FALL
+    objA0.animation.frame = 0
+}
+
+function float CrowdControl_ChaoHelper.getUnderwaterFactor()
+{
+    u16 waterY = water.height.current
+
+    float halfH = float(objA0.box_size.y) * 0.5f
+    float y = float(objA0.position.y.u16)
+
+    float top = y - halfH
+    float bot = y + halfH
+
+    if (bot <= float(waterY))
+        return 0.0f
+
+    if (top >= float(waterY))
+        return 1.0f
+
+    float submerged = bot - float(waterY)
+    float height = halfH * 2.0f
+
+    float t = submerged / height
+
+    if (t < 0.0f)
+        t = 0.0f
+    if (t > 1.0f)
+        t = 1.0f
+
+    return t
+}
+
+
+function void CrowdControl_ChaoTry.getNearScreen()
+{
+    s16 pX = s16(u16[0xffffb000 + 0x10])
+    s16 pY = s16(u16[0xffffb000 + 0x14])
+
+    s16 sx = s16(objA0.position.x.u16)
+    s16 sy = s16(objA0.position.y.u16)
+
+    u16 dist = u16(abs(sx - pX)) + u16(abs(sy - pY))
+
+    if (dist < CROWD_CONTROL_CHAO_TELEPORT_SNAP_DIST)
+    {
+        return
+    }
+
+    u16 camX = camera.position.x.u16
+    u16 camY = camera.position.y.u16
+    u16 w = getScreenWidth()
+
+    s16 targetX = s16(pX) + 28
+    s16 targetY = s16(camY) - CROWD_CONTROL_CHAO_SNAP_ABOVE_CAM_Y
+
+    s16 minX = s16(camX) + 16
+    s16 maxX = s16(camX) + s16(w) - 16
+
+    if (targetX < minX)
+    {
+        targetX = minX
+    }
+    else if (targetX > maxX)
+    {
+        targetX = maxX
+    }
+
+    objA0.position.x.u16 = u16(targetX)
+    objA0.position.y.u16 = u16(targetY)
+
+    objA0.value39 = CROWD_CONTROL_CHAO_MODE_ZOOMIER
+    objA0.animation.frame = 0
+}
+
+function bool CrowdControl_ChaoHelper.isOffscreen()
+{
+    u16 camX = camera.position.x.u16
+    u16 camY = camera.position.y.u16
+    u16 w = getScreenWidth()
+    u16 h = getScreenHeight()
+
+    s16 x = s16(objA0.position.x.u16)
+    s16 y = s16(objA0.position.y.u16)
+
+    s16 left = s16(camX) - s16(CROWD_CONTROL_CHAO_OFFSCREEN_MARGIN)
+    s16 right = s16(camX) + s16(w) + s16(CROWD_CONTROL_CHAO_OFFSCREEN_MARGIN)
+    s16 top = s16(camY) - s16(CROWD_CONTROL_CHAO_OFFSCREEN_MARGIN)
+    s16 bottom = s16(camY) + s16(h) + s16(CROWD_CONTROL_CHAO_OFFSCREEN_MARGIN)
+
+    if (x < left)
+    {
+        return true
+    }
+
+    if (x > right)
+    {
+        return true
+    }
+
+    if (y < top)
+    {
+        return true
+    }
+
+    if (y > bottom)
+    {
+        return true
+    }
+
+    return false
+}
+
+function void CrowdControl_ChaoHelper.clearTarget()
+{
+    objA0.value3e = 0
+}
+
+function void CrowdControl_ChaoHelper.setTarget(u32 addr)
+{
+    objA0.value3e = u16(addr)
+}
+
+function u32 CrowdControl_ChaoHelper.getTarget()
+{
+    if (objA0.value3e == 0)
+    {
+        return 0
+    }
+
+    return 0xffff0000 + u32(objA0.value3e)
+}
+
+
+function s8 CrowdControl_ChaoHelper.getOffsetY()
+{
+    return s8(objA0.value3a)
+}
+
+
+
+//# address-hook(0x060d32) end(0x060d3e)
+function void fn060d32()
+{
+    if ((global.game_mode & 0x7f) > 0 && objA0.value32 == 2)
+    {
+        CrowdControl_Chao.update()
+    }
+    else
+    {
+        base.fn060d32()
+    }
+}
+
+function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 rq)
+{
+    if (objA0.update_address == 0x060d32 && (global.game_mode & 0x7f) > 0  && objA0.value32 == 2)
+    {
+        CrowdControl_Chao.draw(rq)
+    }
+
+    return base.Standalone.onWriteToSpriteTable(px, py, rq)
+}
+
+
+//# address-hook(0x006a76) end(0x006bd6)
+function void InitializeGameCharacters()
+{
+    base.InitializeGameCharacters()
+    CrowdControl_Chao.resetCount()
+}
+
+function void Standalone.onRestartAtCheckpoint()
+{
+    CrowdControl_Chao.resetCount()
+    base.Standalone.onRestartAtCheckpoint()
+}

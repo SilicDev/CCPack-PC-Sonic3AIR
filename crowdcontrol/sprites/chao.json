@@ -1,0 +1,427 @@
+{
+    "CBK_chao_casual_0": {
+        "File": "cbk_chao.png",
+        "Rect": "2,102,19,22",
+        "Center": "10,11"
+    },
+    "CBK_chao_casual_1": {
+        "File": "cbk_chao.png",
+        "Rect": "25,102,19,22",
+        "Center": "10,11"
+    },
+    "CBK_chao_casual_2": {
+        "File": "cbk_chao.png",
+        "Rect": "48,102,19,22",
+        "Center": "10,11"
+    },
+    "CBK_chao_casual_3": {
+        "File": "cbk_chao.png",
+        "Rect": "71,102,19,22",
+        "Center": "10,11"
+    },
+    "CBK_chao_zoom_0": {
+        "File": "cbk_chao.png",
+        "Rect": "0,30,22,15",
+        "Center": "11,7"
+    },
+    "CBK_chao_zoom_1": {
+        "File": "cbk_chao.png",
+        "Rect": "46,30,22,15",
+        "Center": "11,7"
+    },
+    "CBK_chao_zoom_2": {
+        "File": "cbk_chao.png",
+        "Rect": "23,30,22,15",
+        "Center": "11,7"
+    },
+    "CBK_chao_zoom_3": {
+        "File": "cbk_chao.png",
+        "Rect": "46,30,22,15",
+        "Center": "11,7"
+    },
+    "CBK_chao_proud_0": {
+        "File": "cbk_chao.png",
+        "Rect": "1,0,22,25",
+        "Center": "11,10"
+    },
+    "CBK_chao_angy_0": {
+        "File": "cbk_chao.png",
+        "Rect": "0,51,23,19",
+        "Center": "11,10"
+    },
+    "CBK_chao_angy_1": {
+        "File": "cbk_chao.png",
+        "Rect": "46,51,23,19",
+        "Center": "11,10"
+    },
+    "CBK_chao_angy_2": {
+        "File": "cbk_chao.png",
+        "Rect": "23,51,23,19",
+        "Center": "11,10"
+    },
+    "CBK_chao_angy_3": {
+        "File": "cbk_chao.png",
+        "Rect": "46,51,23,19",
+        "Center": "11,10"
+    },
+    "CBK_chao_hurt_0": {
+        "File": "cbk_chao.png",
+        "Rect": "0,77,23,23",
+        "Center": "11,11"
+    },
+    "CBK_chao_hurt_1": {
+        "File": "cbk_chao.png",
+        "Rect": "23,77,23,23",
+        "Center": "11,11"
+    },
+    "CBK_chao_hurt_2": {
+        "File": "cbk_chao.png",
+        "Rect": "46,77,23,23",
+        "Center": "11,11"
+    },
+    "CBK_chao_hurt_3": {
+        "File": "cbk_chao.png",
+        "Rect": "69,77,23,23",
+        "Center": "11,11"
+    },
+    "sonic_chao_casual_0": {
+        "File": "gba_chao.png",
+        "Rect": "139,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_casual_1": {
+        "File": "gba_chao.png",
+        "Rect": "154,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_casual_2": {
+        "File": "gba_chao.png",
+        "Rect": "169,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_casual_3": {
+        "File": "gba_chao.png",
+        "Rect": "154,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_zoom_0": {
+        "File": "gba_chao.png",
+        "Rect": "139,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_zoom_1": {
+        "File": "gba_chao.png",
+        "Rect": "154,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_zoom_2": {
+        "File": "gba_chao.png",
+        "Rect": "169,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_zoom_3": {
+        "File": "gba_chao.png",
+        "Rect": "154,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_proud_0": {
+        "File": "gba_chao.png",
+        "Rect": "169,59,14,20",
+        "Center": "7,10"
+    },
+    "sonic_chao_angy_0": {
+        "File": "gba_chao.png",
+        "Rect": "88,61,15,18",
+        "Center": "7,9"
+    },
+    "sonic_chao_angy_1": {
+        "File": "gba_chao.png",
+        "Rect": "107,61,15,18",
+        "Center": "7,9"
+    },
+    "sonic_chao_angy_2": {
+        "File": "gba_chao.png",
+        "Rect": "88,61,15,18",
+        "Center": "7,9"
+    },
+    "sonic_chao_angy_3": {
+        "File": "gba_chao.png",
+        "Rect": "107,61,15,18",
+        "Center": "7,9"
+    },
+    "sonic_chao_hurt_0": {
+        "File": "gba_chao.png",
+        "Rect": "3,58,17,20",
+        "Center": "9,10"
+    },
+    "sonic_chao_hurt_1": {
+        "File": "gba_chao.png",
+        "Rect": "25,58,17,20",
+        "Center": "9,10"
+    },
+    "sonic_chao_hurt_2": {
+        "File": "gba_chao.png",
+        "Rect": "46,58,17,20",
+        "Center": "9,10"
+    },
+    "sonic_chao_hurt_3": {
+        "File": "gba_chao.png",
+        "Rect": "25,58,17,20",
+        "Center": "9,10"
+    },
+    "amy_chao_casual_0": {
+        "File": "gba_chao.png",
+        "Rect": "136,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_casual_1": {
+        "File": "gba_chao.png",
+        "Rect": "151,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_casual_2": {
+        "File": "gba_chao.png",
+        "Rect": "166,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_casual_3": {
+        "File": "gba_chao.png",
+        "Rect": "151,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_zoom_0": {
+        "File": "gba_chao.png",
+        "Rect": "136,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_zoom_1": {
+        "File": "gba_chao.png",
+        "Rect": "151,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_zoom_2": {
+        "File": "gba_chao.png",
+        "Rect": "166,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_zoom_3": {
+        "File": "gba_chao.png",
+        "Rect": "151,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_proud_0": {
+        "File": "gba_chao.png",
+        "Rect": "166,0,14,20",
+        "Center": "7,10"
+    },
+    "amy_chao_angy_0": {
+        "File": "gba_chao.png",
+        "Rect": "88,0,14,18",
+        "Center": "7,9"
+    },
+    "amy_chao_angy_1": {
+        "File": "gba_chao.png",
+        "Rect": "103,0,14,18",
+        "Center": "7,9"
+    },
+    "amy_chao_angy_2": {
+        "File": "gba_chao.png",
+        "Rect": "88,0,14,18",
+        "Center": "7,9"
+    },
+    "amy_chao_angy_3": {
+        "File": "gba_chao.png",
+        "Rect": "103,0,14,18",
+        "Center": "7,9"
+    },
+    "amy_chao_hurt_0": {
+        "File": "gba_chao.png",
+        "Rect": "3,2,17,20",
+        "Center": "9,10"
+    },
+    "amy_chao_hurt_1": {
+        "File": "gba_chao.png",
+        "Rect": "25,2,17,20",
+        "Center": "9,10"
+    },
+    "amy_chao_hurt_2": {
+        "File": "gba_chao.png",
+        "Rect": "25,2,17,20",
+        "Center": "9,10"
+    },
+    "amy_chao_hurt_3": {
+        "File": "gba_chao.png",
+        "Rect": "46,2,17,20",
+        "Center": "9,10"
+    },
+    "tails_chao_casual_0": {
+        "File": "gba_chao.png",
+        "Rect": "136,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_casual_1": {
+        "File": "gba_chao.png",
+        "Rect": "153,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_casual_2": {
+        "File": "gba_chao.png",
+        "Rect": "170,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_casual_3": {
+        "File": "gba_chao.png",
+        "Rect": "153,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_zoom_0": {
+        "File": "gba_chao.png",
+        "Rect": "136,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_zoom_1": {
+        "File": "gba_chao.png",
+        "Rect": "153,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_zoom_2": {
+        "File": "gba_chao.png",
+        "Rect": "170,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_zoom_3": {
+        "File": "gba_chao.png",
+        "Rect": "153,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_proud_0": {
+        "File": "gba_chao.png",
+        "Rect": "170,86,16,20",
+        "Center": "8,10"
+    },
+    "tails_chao_angy_0": {
+        "File": "gba_chao.png",
+        "Rect": "87,88,17,19",
+        "Center": "8,10"
+    },
+    "tails_chao_angy_1": {
+        "File": "gba_chao.png",
+        "Rect": "106,88,17,19",
+        "Center": "8,10"
+    },
+    "tails_chao_angy_2": {
+        "File": "gba_chao.png",
+        "Rect": "87,88,17,19",
+        "Center": "8,10"
+    },
+    "tails_chao_angy_3": {
+        "File": "gba_chao.png",
+        "Rect": "106,88,17,19",
+        "Center": "8,10"
+    },
+    "tails_chao_hurt_0": {
+        "File": "gba_chao.png",
+        "Rect": "3,86,17,20",
+        "Center": "8,10"
+    },
+    "tails_chao_hurt_1": {
+        "File": "gba_chao.png",
+        "Rect": "25,86,17,20",
+        "Center": "8,10"
+    },
+    "tails_chao_hurt_2": {
+        "File": "gba_chao.png",
+        "Rect": "46,86,17,20",
+        "Center": "8,10"
+    },
+    "tails_chao_hurt_3": {
+        "File": "gba_chao.png",
+        "Rect": "25,86,17,20",
+        "Center": "8,10"
+    },
+    "knux_chao_casual_0": {
+        "File": "gba_chao.png",
+        "Rect": "137,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_casual_1": {
+        "File": "gba_chao.png",
+        "Rect": "151,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_casual_2": {
+        "File": "gba_chao.png",
+        "Rect": "165,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_casual_3": {
+        "File": "gba_chao.png",
+        "Rect": "151,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_zoom_0": {
+        "File": "gba_chao.png",
+        "Rect": "137,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_zoom_1": {
+        "File": "gba_chao.png",
+        "Rect": "151,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_zoom_2": {
+        "File": "gba_chao.png",
+        "Rect": "165,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_zoom_3": {
+        "File": "gba_chao.png",
+        "Rect": "151,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_proud_0": {
+        "File": "gba_chao.png",
+        "Rect": "165,31,13,20",
+        "Center": "7,10"
+    },
+    "knux_chao_angy_0": {
+        "File": "gba_chao.png",
+        "Rect": "88,33,14,18",
+        "Center": "7,9"
+    },
+    "knux_chao_angy_1": {
+        "File": "gba_chao.png",
+        "Rect": "107,33,14,18",
+        "Center": "7,9"
+    },
+    "knux_chao_angy_2": {
+        "File": "gba_chao.png",
+        "Rect": "88,33,14,18",
+        "Center": "7,9"
+    },
+    "knux_chao_angy_3": {
+        "File": "gba_chao.png",
+        "Rect": "107,33,14,18",
+        "Center": "7,9"
+    },
+    "knux_chao_hurt_0": {
+        "File": "gba_chao.png",
+        "Rect": "3,30,17,20",
+        "Center": "9,10"
+    },
+    "knux_chao_hurt_1": {
+        "File": "gba_chao.png",
+        "Rect": "25,30,17,20",
+        "Center": "9,10"
+    },
+    "knux_chao_hurt_2": {
+        "File": "gba_chao.png",
+        "Rect": "46,30,17,20",
+        "Center": "9,10"
+    },
+    "knux_chao_hurt_3": {
+        "File": "gba_chao.png",
+        "Rect": "25,30,17,20",
+        "Center": "9,10"
+    }
+}
