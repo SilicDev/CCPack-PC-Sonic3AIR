@@ -226,6 +226,11 @@ function void PreFrameUpdate()
 
 function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 duration)
 {
+    CrowdControl.triggerEffect(id, code, quantity, duration, "A Viewer")
+}
+
+function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 duration, string viewer)
+{
     // Debug output
     //debugLog(code)
     if ((u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT) || global.game.paused)
@@ -768,7 +773,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 
     if (code == "Chao")
     {
-        u32 response = CrowdControl_Chao.trySpawn("Viewer")
+        u32 response = CrowdControl_Chao.trySpawn(viewer)
         string message = ""
         if (response == CCStatusCode.RETRY) 
         {
@@ -781,7 +786,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, response, message)
     }
     // For unknown effects
-    base.CrowdControl.triggerEffect(id, code, quantity, duration)
+    base.CrowdControl.triggerEffect(id, code, quantity, duration, viewer)
 }
 
 // return is unused for now, just adding in case we have additional fail conditions

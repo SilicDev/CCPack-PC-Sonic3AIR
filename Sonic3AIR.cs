@@ -80,8 +80,8 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 50, Duration = 20, Description = "Change the gravity randomly every second." },
                 new("Partner Bumper", "PartnerBumper")
                     { Price = 100, Duration = 30, Description = "Makes Tails act like a bumper and bounce the player away." },
-                new("Demon Chase", "Mephiles")
-                    { Price = 100, Duration = 30, Description = "Spawn an enemy to chase the player (Instant Kill)." },
+                new("Mephiles Hunt", "Mephiles")
+                    { Price = 100, Duration = 30, Description = "Spawn an enemy to chase the player (Instant Kill, requires Mephiles Hunt mod by Sotaknuck)." },
                 new("Chao", "Chao")
                     { Price = 10, Description = "Spawn a random chao to assist the player." },
             ];
