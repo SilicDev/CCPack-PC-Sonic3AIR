@@ -39,6 +39,8 @@ global u32 gravity_timer = 0
 global u32 gravity_id = 0
 global u32 gravity_swap_timer = 0
 
+global u32 mephiles_id = 0
+
 constant array<u16> gravity_values =
 {
     1, 2, 512, 1024,
@@ -97,6 +99,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(gravity_id, CCStatusCode.PAUSED, "")
         }
+        if(MEPHILES.timer > 0)
+        {
+            CrowdControl.sendResponse(mephiles_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -124,6 +130,10 @@ function void PreFrameUpdate()
         if (gravity_timer > 0)
         {
             CrowdControl.sendResponse(gravity_id, CCStatusCode.RESUME, "")
+        }
+        if(MEPHILES.timer > 0)
+        {
+            CrowdControl.sendResponse(mephiles_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -737,6 +747,22 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         partnerBumper_timer = PARTNER_BUMPER_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
+    }
+    if (code == "Mephiles")
+    {
+        if (!CrowdControl_MEPHILES.isTargetActive()) 
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Mephiles Hunt Mod Not Active")
+            return
+        }
+        if(MEPHILES.timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        mephiles_id = id
+        CrowdControl_MEPHILES.activate(duration / 1000 * 60)
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
     }
 
     // For unknown effects

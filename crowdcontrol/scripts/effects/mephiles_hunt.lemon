@@ -1,0 +1,145 @@
+
+global u32 MEPHILES.timer = 0
+
+constant string BASE_MEPH_OFF             = "Mephiles.Off"
+constant string BASE_MEPH_STATE           = "Mephiles.State"
+constant string BASE_MEPH_KILLS           = "Mephiles.Kills"
+constant string BASE_MEPH_ANIM_COUNTER    = "Mephiles.AnimationCounter"
+constant string BASE_MEPH_STATE_OLD       = "Mephiles.StateOld"
+constant string BASE_MEPH_FLOAT           = "Mephiles.Float"
+constant string BASE_MEPH_FLOAT_ANGLE     = "Mephiles.Floatangle"
+constant string BASE_MEPH_RENDER_PRIORITY = "Mephiles.RenderPriority"
+
+
+function bool CrowdControl_MEPHILES.canActivate()
+{
+    return CrowdControl_MEPHILES.isTargetActive() &&  MEPHILES.timer == 0
+}
+
+function void CrowdControl_MEPHILES.activate(u32 duration)
+{
+    if (!CrowdControl_MEPHILES.isTargetActive())
+        return
+
+    MEPHILES.timer = duration
+    MEPH_HUNT_DURATION = duration
+
+    System.setGlobalVariableValueByName(BASE_MEPH_OFF, 0)
+
+    u8 s = (level.boss_encounter == 1) ? 5 : 0
+    System.setGlobalVariableValueByName(BASE_MEPH_STATE, s)
+
+    System.setGlobalVariableValueByName(BASE_MEPH_KILLS, 0)
+    System.setGlobalVariableValueByName(BASE_MEPH_ANIM_COUNTER, 0)
+    System.setGlobalVariableValueByName(BASE_MEPH_STATE_OLD, 0)
+    System.setGlobalVariableValueByName(BASE_MEPH_FLOAT, 0)
+    System.setGlobalVariableValueByName(BASE_MEPH_FLOAT_ANGLE, 0)
+    System.setGlobalVariableValueByName(BASE_MEPH_RENDER_PRIORITY, 0)
+}
+
+function void CrowdControl_MEPHILES.applyBlock()
+{
+
+    if (!CrowdControl_MEPHILES.isTargetActive())
+        return
+
+    System.setGlobalVariableValueByName(BASE_MEPH_OFF, 1)
+    System.setGlobalVariableValueByName(BASE_MEPH_STATE, 0)
+    System.setGlobalVariableValueByName(BASE_MEPH_KILLS, 0)
+}
+
+
+function bool CrowdControl_MEPHILES.isAggressive()
+{
+    u8 s = u8(System.getGlobalVariableValueByName(BASE_MEPH_STATE))
+    if (s == 1 || s == 2 || s == 3 || s == 4)
+        return true
+
+    if (u8(System.getGlobalVariableValueByName(BASE_MEPH_KILLS)) != 0)
+        return true
+
+    return false
+}
+
+function bool CrowdControl_MEPHILES.isTargetActive()
+{
+    return Mods.isModActive("Mephiles' Hunt")
+}
+
+function void CrowdControl_MEPHILES.preTick()
+{
+
+    if (!CrowdControl_MEPHILES.isTargetActive())
+        return
+
+    if (MEPHILES.timer != 0)
+    {
+        System.setGlobalVariableValueByName(BASE_MEPH_OFF, 0)
+        return
+    }
+
+    CrowdControl_MEPHILES.applyBlock()
+}
+
+function void CrowdControl_MEPHILES.advanceTimer()
+{
+    if (!CrowdControl_MEPHILES.isTargetActive())
+        return
+
+    if (MEPHILES.timer != 0 && CrowdControl_MEPHILES.isAggressive())
+    {
+        MEPHILES.timer -= 1
+        if (MEPHILES.timer == 0)
+        {
+            CrowdControl.sendResponse(mephiles_id, CCStatusCode.FINISHED, "")
+            CrowdControl_MEPHILES.applyBlock()
+        }
+
+    }
+}
+
+function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
+{
+    CrowdControl_MEPHILES.preTick()
+    return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
+}
+
+//# address-hook(0x00db44) end(0x00dbb2)
+function void RenderHUD()
+{
+
+    CrowdControl_MEPHILES.preTick()
+    if (MEPHILES.timer)
+    {
+        u8 state = u8(System.getGlobalVariableValueByName(BASE_MEPH_STATE))
+        bool off = (u8(System.getGlobalVariableValueByName(BASE_MEPH_OFF)) != 0)
+
+        bool allowedZone = (global.zone < 0x13) || (global.zone == 0x16) || (global.zone_act == 0x1700)
+        bool notSS = (global.zone != 0x0c)
+
+        if (state == 0 && !off && allowedZone && notSS)
+        {
+            System.setGlobalVariableValueByName(BASE_MEPH_STATE, 1)
+            state = 1
+        }
+
+        if (state != 0)
+        {
+            System.callFunctionByName("RenderMephiles")
+        }
+    }
+    base.RenderHUD()
+    CrowdControl_MEPHILES.advanceTimer()
+}
+
+function void Standalone.onLevelStart() 
+{
+    MEPHILES.timer = 0
+    base.Standalone.onLevelStart()
+}
+
+function void Standalone.onRestartAtCheckpoint() 
+{
+    MEPHILES.timer = 0
+    base.Standalone.onRestartAtCheckpoint()
+}
