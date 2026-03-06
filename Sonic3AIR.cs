@@ -71,7 +71,7 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                 new("Big Arms", "BigArms")
                     { Price = 200, Description = "Spawns Big Arms to chase the player." },
                 new("Disable Jump", "NoJump")
-                    { Price = 50, Duration = 10, Description = "Disables the player's ability to jump." },
+                    { Price = 50, Description = "Disables the player's ability to jump until they clear the button mash." },
                 new("Disable Jump Abilities", "NoJumpAbility")
                     { Price = 50, Duration = 20, Description = "Disables the player's jump abilities (Instashield, Flight, Glide)." },
                 new("Earthquake", "Earthquake")
@@ -80,6 +80,10 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 50, Duration = 20, Description = "Change the gravity randomly every second." },
                 new("Partner Bumper", "PartnerBumper")
                     { Price = 100, Duration = 30, Description = "Makes Tails act like a bumper and bounce the player away." },
+                new("Demon Chase", "Mephiles")
+                    { Price = 100, Duration = 30, Description = "Spawn an enemy to chase the player (Instant Kill)." },
+                new("Chao", "Chao")
+                    { Price = 10, Description = "Spawn a random chao to assist the player." },
             ];
             return effects;
         }

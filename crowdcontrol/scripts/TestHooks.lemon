@@ -4,6 +4,7 @@
 
 #if CC_L_TO_SPAWN
 // temporary hook-up mechanism
+//# address-hook(0x0013e4) end(0x0014e4)
 function void UpdateGamePause() 
 {
 	base.UpdateGamePause()
