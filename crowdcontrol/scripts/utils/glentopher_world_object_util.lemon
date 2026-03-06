@@ -1,0 +1,520 @@
+/*
+GLENTOPHER_WORLD_OBJECT_UTILS
+- findClosestHittableObject: enemies, monitors, SOZ1 boss, Mushmeanie
+- applyHit: does the right thing for each of the above
+- checkTerrainCollisionSide
+- findHittableCollisionForObject
+- TODO: add more special enemies (e.g. HCZ piranha) via classification helpers
+*/
+
+constant u32 GLENTOPHER_WORLD_OBJECT_UTILS.SOZ1_BOSS_UPDATE = 0x076f46
+constant u8  GLENTOPHER_WORLD_OBJECT_UTILS.OBJID_MUSHMEANIE = 0x8d
+constant u32 GLENTOPHER_WORLD_OBJECT_UTILS.MUSHMEANIE_UPDATE_A = 0x08dafc
+constant u32 GLENTOPHER_WORLD_OBJECT_UTILS.MUSHMEANIE_UPDATE_B = 0x08daf6
+
+constant u8 GLENTOPHER_COLLISION_NONE    = 0
+constant u8 GLENTOPHER_COLLISION_CEILING = 1
+constant u8 GLENTOPHER_COLLISION_FLOOR   = 2
+constant u8 GLENTOPHER_COLLISION_LEFT    = 3
+constant u8 GLENTOPHER_COLLISION_RIGHT   = 4
+
+
+// ------------------------------------------------------------
+// CLASSIFICATION HELPERS (A1 expected to be set by caller)
+// ------------------------------------------------------------
+
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.isSOZ1BossA1()
+{
+    if (objA1.update_address != GLENTOPHER_WORLD_OBJECT_UTILS.SOZ1_BOSS_UPDATE)
+        return false
+
+    if (objA1.base_state != 0x06)
+        return false
+
+    return (objA1.render_flags & render_flag.VISIBLE) != 0
+}
+
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.isMushmeanieA1()
+{
+    if (u8[A1 + 0x28] == GLENTOPHER_WORLD_OBJECT_UTILS.OBJID_MUSHMEANIE)
+        return true
+
+    if (objA1.update_address == GLENTOPHER_WORLD_OBJECT_UTILS.MUSHMEANIE_UPDATE_A)
+        return true
+
+    return objA1.update_address == GLENTOPHER_WORLD_OBJECT_UTILS.MUSHMEANIE_UPDATE_B
+}
+
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.isEnemyA1()
+{
+    u8 ca = objA1.collision_attributes
+    if (ca == 0)
+        return false
+
+    u8 flags = ca & collision_attributes.flags
+    return flags == 0
+}
+
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.isMonitorA1()
+{
+    u8 ca = objA1.collision_attributes
+    if (ca == 0)
+        return false
+
+    u8 flags = ca & collision_attributes.flags
+    if (flags != collision.flag.ITEM)
+        return false
+
+    u8 sizeId = ca & collision_attributes.size
+    return sizeId == collision.size.16x16
+}
+
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.isHittableA1(bool includeMonitors)
+{
+    if (GLENTOPHER_WORLD_OBJECT_UTILS.isSOZ1BossA1())
+        return true
+
+    if (GLENTOPHER_WORLD_OBJECT_UTILS.isMushmeanieA1())
+        return true
+
+    if (GLENTOPHER_WORLD_OBJECT_UTILS.isEnemyA1())
+        return true
+
+    if (includeMonitors && GLENTOPHER_WORLD_OBJECT_UTILS.isMonitorA1())
+        return true
+
+    return false
+}
+
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.isOnScreenA1()
+{
+    u16 objX = objA1.position.x.u16
+    u16 objY = objA1.position.y.u16
+
+    u16 camX = camera.position.x.u16
+    u16 camY = camera.position.y.u16
+    u16 w = getScreenWidth()
+    u16 h = getScreenHeight()
+
+    if (objX < camX)
+        return false
+    if (objX >= camX + w)
+        return false
+    if (objY < camY)
+        return false
+    if (objY >= camY + h)
+        return false
+
+    return true
+}
+
+
+// ------------------------------------------------------------
+// Find closest hittable object to (originX, originY)
+// Returns: A1 address (0xffffxxxx) or 0 if none
+// ------------------------------------------------------------
+function u32 GLENTOPHER_WORLD_OBJECT_UTILS.findClosestHittableObject(u16 originX, u16 originY, u16 maxDx, u16 maxDy, bool requireOnScreen, bool includeMonitors)
+{
+    u32 bestAddr = 0
+    u32 bestDist = 0xffffffff
+
+    push(A4)
+    push(A2)
+    push(A1)
+
+    A4 = addressof(global.dynamic_objects.size) + 2
+    u16 remaining = global.dynamic_objects.size + 4
+
+    while (remaining != 0)
+    {
+        A1 = 0xffff0000 + u16[A4]
+        A4 += 2
+        remaining -= 2
+
+        if (A1 == 0)
+            continue
+
+        if (objA1.update_address == 0)
+            continue
+
+        if (!GLENTOPHER_WORLD_OBJECT_UTILS.isHittableA1(includeMonitors))
+            continue
+
+        if (requireOnScreen)
+        {
+            if (!GLENTOPHER_WORLD_OBJECT_UTILS.isOnScreenA1())
+                continue
+        }
+
+        u16 objX = objA1.position.x.u16
+        u16 objY = objA1.position.y.u16
+
+        u16 dx = u16(abs(s16(objX - originX)))
+        u16 dy = u16(abs(s16(objY - originY)))
+
+        if (maxDx != 0 && dx >= maxDx)
+            continue
+
+        if (maxDy != 0 && dy >= maxDy)
+            continue
+
+        u32 dist = u32(dx) + u32(dy)
+        if (dist < bestDist)
+        {
+            bestDist = dist
+            bestAddr = A1
+        }
+    }
+
+    A1 = pop()
+    A2 = pop()
+    A4 = pop()
+
+    return bestAddr
+}
+
+function u32 GLENTOPHER_WORLD_OBJECT_UTILS.findClosestHittableObject(u16 originX, u16 originY, u16 maxDx, u16 maxDy, bool requireOnScreen)
+{
+    return GLENTOPHER_WORLD_OBJECT_UTILS.findClosestHittableObject(originX, originY, maxDx, maxDy, requireOnScreen, true)
+}
+
+
+// ------------------------------------------------------------
+// Apply hit to object at address
+// - detects SOZ1 boss, Mushmeanie, monitor, or regular enemy
+// - returns true if it did something
+// ------------------------------------------------------------
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.applyHit(u32 objectAddr)
+{
+    if (objectAddr == 0)
+        return false
+
+    u32 savedA1 = A1
+    A1 = objectAddr
+
+    if (objA1.update_address == 0)
+    {
+        A1 = savedA1
+        return false
+    }
+
+    // SOZ1 boss (special; no collision attr required)
+    if (GLENTOPHER_WORLD_OBJECT_UTILS.isSOZ1BossA1())
+    {
+        bool okBoss = GLENTOPHER_WORLD_OBJECT_UTILS.hitSOZ1Boss(A1)
+        A1 = savedA1
+        return okBoss
+    }
+
+    // Mushmeanie (special)
+    if (GLENTOPHER_WORLD_OBJECT_UTILS.isMushmeanieA1())
+    {
+        u32 mushAddr = A1
+        A1 = savedA1
+        return GLENTOPHER_WORLD_OBJECT_UTILS.hitMushmeanie(mushAddr)
+    }
+
+    // Enemy
+    if (GLENTOPHER_WORLD_OBJECT_UTILS.isEnemyA1())
+    {
+        // "hit counter" style enemies
+        if (u8[A1 + 0x29] != 0)
+        {
+            u32 savedA0 = A0
+            A0 = 0xffffb000
+
+            u8[A1 + 0x1c] = A0.u8
+            u8[A1 + 0x25] = u8[A1 + 0x28]
+            u8[A1 + 0x28] = 0
+            --u8[A1 + 0x29]
+            if (u8[A1 + 0x29] == 0)
+                objA1.flags2a |= 0x80
+
+            A0 = savedA0
+            A1 = savedA1
+            return true
+        }
+
+        // One-shot enemies
+        if (u8[A1 + 0x2a] & 0x04)
+        {
+            A2 = 0xffff0000 + u16[A1 + 0x3c]
+            u8[A2] &= ~(1 << u8[A1 + 0x3b])
+        }
+
+        objA1.flags2a |= 0x80
+        Enemy.addScore(A1, 0x010216)
+
+        objA1.update_address = addressof(SmallExplosion.BaseUpdate)
+        u8[A1 + 0x05] = 0
+
+        A1 = savedA1
+        return true
+    }
+
+    // Monitor
+    if (GLENTOPHER_WORLD_OBJECT_UTILS.isMonitorA1())
+    {
+        u32 savedA0x = A0
+        A0 = 0xffffb000
+        objA1.base_state = 0x04
+        objA1.monitor.character_address = A0.u16
+        A0 = savedA0x
+
+        A1 = savedA1
+        return true
+    }
+
+    A1 = savedA1
+    return false
+}
+
+
+// ------------------------------------------------------------
+// SOZ1 boss hit routine
+// ------------------------------------------------------------
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.hitSOZ1Boss(u32 bossAddr)
+{
+    if (bossAddr == 0)
+        return false
+
+    u32 savedA0 = A0
+    u32 savedA1 = A1
+
+    A1 = bossAddr
+    if (!GLENTOPHER_WORLD_OBJECT_UTILS.isSOZ1BossA1())
+    {
+        A0 = savedA0
+        A1 = savedA1
+        return false
+    }
+
+    fn0103ba()
+
+    A0 = bossAddr
+    A1 = 0xffffb000
+
+    objA0.velocity.x = -objA0.velocity.x
+    objA0.velocity.y = -objA0.velocity.y
+    objA0.groundspeed = -objA0.groundspeed
+
+    objA0.base_state = 0x08
+    u32[A0 + 0x30] = 0x077495
+    objA0.countdown_callback = 0x076ffa
+
+    A2 = 0xffff0000 + u16[A0 + 0x46]
+    u16[A2 + 0x44] = A1.u16
+    u8[A2 + 0x2a] |= 0x40
+    u8[A2 + 0x38] |= 0x80
+
+    A0 = savedA0
+    A1 = savedA1
+    return true
+}
+
+
+// ------------------------------------------------------------
+// Mushmeanie hit routine
+// ------------------------------------------------------------
+function bool GLENTOPHER_WORLD_OBJECT_UTILS.hitMushmeanie(u32 mushAddr)
+{
+    if (mushAddr == 0)
+        return false
+
+    u32 savedA0 = A0
+    u32 savedA1 = A1
+
+    A0 = mushAddr
+
+    if (objA0.update_address == 0)
+    {
+        A0 = savedA0
+        A1 = savedA1
+        return false
+    }
+
+    if (u8[A0 + 0x28] != GLENTOPHER_WORLD_OBJECT_UTILS.OBJID_MUSHMEANIE && objA0.update_address != GLENTOPHER_WORLD_OBJECT_UTILS.MUSHMEANIE_UPDATE_A && objA0.update_address != GLENTOPHER_WORLD_OBJECT_UTILS.MUSHMEANIE_UPDATE_B)
+    {
+        A0 = savedA0
+        A1 = savedA1
+        return false
+    }
+
+    if (objA0.state != 0)
+    {
+        --objA0.state
+        if (objA0.state != 0)
+        {
+            A0 = savedA0
+            A1 = savedA1
+            return true
+        }
+        objA0.collision_attributes = (collision.flag.SPECIAL | collision.size.8x8_2)
+    }
+
+    --objA0.value39
+    if (objA0.value39 == 0)
+    {
+        fn085732()
+        A0 = savedA0
+        A1 = savedA1
+        return true
+    }
+
+    u8[A0 + 0x28] = 0
+    u8[A0 + 0x29] = 0
+    objA0.state = 0x20
+    objA0.flags2a |= 0x40
+
+    A0 = savedA0
+    A1 = savedA1
+    return true
+}
+
+
+// ------------------------------------------------------------
+// Terrain collision side test
+// ------------------------------------------------------------
+function u8 GLENTOPHER_WORLD_OBJECT_UTILS.checkTerrainCollisionSide(u32 objectAddr)
+{
+    if (objectAddr == 0)
+        return GLENTOPHER_COLLISION_NONE
+
+    u32 savedA0 = A0
+    A0 = objectAddr
+
+    pushA456()
+    u32[0xfffff796] = (u8[A0 + 0x2a] == 0x0c) ? u32[0xfffff7b4] : u32[0xfffff7b8]
+    D5.u8 = u8[A0 + 0x2b]
+
+    CheckCeilingCollision()
+    if (D1.s16 <= 0)
+    {
+        popA456()
+        A0 = savedA0
+        return GLENTOPHER_COLLISION_CEILING
+    }
+
+    CheckGroundCollision()
+    if (D1.s16 <= 0)
+    {
+        popA456()
+        A0 = savedA0
+        return GLENTOPHER_COLLISION_FLOOR
+    }
+
+    Character.CheckLeftWallCollision()
+    if (D1.s16 <= 0)
+    {
+        popA456()
+        A0 = savedA0
+        return GLENTOPHER_COLLISION_LEFT
+    }
+
+    Character.CheckRightWallCollision()
+    if (D1.s16 <= 0)
+    {
+        popA456()
+        A0 = savedA0
+        return GLENTOPHER_COLLISION_RIGHT
+    }
+
+    popA456()
+    A0 = savedA0
+    return GLENTOPHER_COLLISION_NONE
+}
+
+
+// ------------------------------------------------------------
+// Find hittable collision for object 
+// ------------------------------------------------------------
+function u32 GLENTOPHER_WORLD_OBJECT_UTILS.findHittableCollisionForObject(u32 objectAddr, u16 maxDx, u16 maxDy, bool requireOnScreen, bool includeMonitors)
+{
+    if (objectAddr == 0)
+        return 0
+
+    u32 savedA0 = A0
+    u32 savedA1 = A1
+    u32 savedA2 = A2
+
+    A0 = objectAddr
+    if (objA0.update_address == 0)
+    {
+        A0 = savedA0
+        A1 = savedA1
+        A2 = savedA2
+        return 0
+    }
+
+    u16 originX = objA0.position.x.u16
+    u16 originY = objA0.position.y.u16
+
+    u32 tgt = GLENTOPHER_WORLD_OBJECT_UTILS.findClosestHittableObject(originX, originY, maxDx, maxDy, requireOnScreen, includeMonitors)
+    if (tgt == 0)
+    {
+        A0 = savedA0
+        A1 = savedA1
+        A2 = savedA2
+        return 0
+    }
+
+    u16 aHx = objA0.hitbox_extends.x
+    u16 aHy = objA0.hitbox_extends.y
+    if (aHx == 0)
+        aHx = 8
+    if (aHy == 0)
+        aHy = 8
+
+    u16 aP1x = objA0.position.x.u16 - aHx
+    u16 aP1y = objA0.position.y.u16 - aHy
+    u16 aSx = aHx * 2
+    u16 aSy = aHy * 2
+
+    A1 = tgt
+    if (objA1.update_address == 0)
+    {
+        A0 = savedA0
+        A1 = savedA1
+        A2 = savedA2
+        return 0
+    }
+
+    u16 bHx = objA1.hitbox_extends.x
+    u16 bHy = objA1.hitbox_extends.y
+
+    if (bHx == 0 || bHy == 0)
+    {
+        u8 ca = objA1.collision_attributes
+        if (ca != 0)
+        {
+            A2 = 0x00ff62 + (ca & collision_attributes.size) * 2
+            bHx = u8[A2]
+            bHy = u8[A2 + 1]
+        }
+    }
+
+    if (bHx == 0)
+        bHx = 12
+    if (bHy == 0)
+        bHy = 12
+
+    u16 bP1x = objA1.position.x.u16 - bHx
+    u16 bP1y = objA1.position.y.u16 - bHy
+    u16 bSx = bHx * 2
+    u16 bSy = bHy * 2
+
+    bool overlap = checkBoxOverlap(aP1x, aP1y, aSx, aSy, bP1x, bP1y, bSx, bSy)
+
+    A0 = savedA0
+    A1 = savedA1
+    A2 = savedA2
+
+    if (overlap)
+        return tgt
+    return 0
+}
+
+function u32 GLENTOPHER_WORLD_OBJECT_UTILS.findHittableCollisionForObject(u32 objectAddr, u16 maxDx, u16 maxDy, bool requireOnScreen)
+{
+    return GLENTOPHER_WORLD_OBJECT_UTILS.findHittableCollisionForObject(objectAddr, maxDx, maxDy, requireOnScreen, true)
+}

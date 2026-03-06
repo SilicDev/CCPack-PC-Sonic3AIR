@@ -1,0 +1,22 @@
+function bool GLENTOPHER_PLAYER_INFO_UTIL.player1IsHurt()
+{
+    u8 st = u8[0xffffb000 + 0x20]
+
+    if (st == char.state.GOT_HURT)
+        return true
+
+    if (st == char.state.GOT_HURT_PANIC)
+        return true
+
+    return false
+}
+
+function bool GLENTOPHER_PLAYER_INFO_UTIL.player1IsPosing()
+{
+    return u8[0xffffb000 + 0x20] == char.state.WIN_POSE
+}
+
+function bool GLENTOPHER_PLAYER_INFO_UTIL.player1HasPriority()
+{
+    return (u16[0xffffb000 + 0x0a] & sprite_attribute.PRIORITY) != 0
+}
