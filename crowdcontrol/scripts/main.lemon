@@ -12,6 +12,7 @@ include define_constants
 include HUD
 include effects/?
 include HUD/?
+include utils/?
 
 
 global bool blue_spheres_jail = false
@@ -765,6 +766,20 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
     }
 
+    if (code == "Chao")
+    {
+        u32 response = CrowdControl_Chao.trySpawn("Viewer")
+        string message = ""
+        if (response == CCStatusCode.RETRY) 
+        {
+            message =  "Chao Limit Reached"
+        }
+        if (response == CCStatusCode.FAILURE) 
+        {
+            message =  "Object Limit Reached"
+        }
+        CrowdControl.sendResponse(id, response, message)
+    }
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration)
 }
