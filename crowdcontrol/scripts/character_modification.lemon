@@ -3,7 +3,7 @@
 //# translated(0x017710) end(0x0177e8)
 function bool Character.CheckStartJump()
 {
-    if (no_jump_timer > 0)
+    if (CrowdControl.updateNoJumpTimer())
     {
         return false
     }
@@ -16,7 +16,7 @@ function void fn016e60() //Character.KnucklesWallIdleUpdate
     // Climbing idle state update
     char.animation.timer = 0x20
     char.animation.frame = 0
-    if (control.player1 & CONTROL_ABC && no_jump_timer == 0)
+    if (control.player1 & CONTROL_ABC && !CrowdControl.updateNoJumpTimer())
     {
         // Knuckles jumping off the wall
         char.velocity.y = -0x380
