@@ -10,5 +10,25 @@
         "CrowdControl_effects_timer_bar_background": {
             "File": "HUD/cc_effect_background.png",
             "Rect": "0,0,110,8"
+        },
+        "CrowdControl_effects_jump_mash_bar_back": {
+            "File": "HUD/cc_effect_jump_mash_prompt.png",
+            "Rect": "24,0,11,50",
+            "Center": "6,25"
+        },
+        "CrowdControl_effects_jump_mash_bar_0": {
+            "File": "HUD/cc_effect_jump_mash_prompt.png",
+            "Rect": "0,0,11,50",
+            "Center": "6,25"
+        },
+        "CrowdControl_effects_jump_mash_bar_1": {
+            "File": "HUD/cc_effect_jump_mash_prompt.png",
+            "Rect": "12,0,11,50",
+            "Center": "6,25"
+        },
+        "CrowdControl_effects_jump_mash_lozenge": {
+            "File": "HUD/cc_effect_jump_mash_prompt.png",
+            "Rect": "4,46,3,1",
+            "Center": "2,1"
         }
     }

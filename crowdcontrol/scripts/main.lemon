@@ -84,10 +84,6 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(no_jump_id, CCStatusCode.PAUSED, "")
         }
-        if (no_jump_ability_timer > 0)
-        {
-            CrowdControl.sendResponse(no_jump_ability_id, CCStatusCode.PAUSED, "")
-        }
         if (earthquake_timer > 0)
         {
             CrowdControl.sendResponse(earthquake_id, CCStatusCode.PAUSED, "")
@@ -111,10 +107,6 @@ function void PreFrameUpdate()
         if (invert_directions_timer > 0)
         {
             CrowdControl.sendResponse(invert_directions_id, CCStatusCode.RESUME, "")
-        }
-        if (no_jump_timer > 0)
-        {
-            CrowdControl.sendResponse(no_jump_id, CCStatusCode.RESUME, "")
         }
         if (no_jump_ability_timer > 0)
         {
@@ -145,14 +137,6 @@ function void PreFrameUpdate()
             if (invert_directions_timer == 0)
             {
                 CrowdControl.sendResponse(invert_directions_id, CCStatusCode.FINISHED, "")
-            }
-        }
-        if (no_jump_timer > 0)
-        {
-            no_jump_timer--
-            if (no_jump_timer == 0)
-            {
-                CrowdControl.sendResponse(no_jump_id, CCStatusCode.FINISHED, "")
             }
         }
         if (no_jump_ability_timer > 0)
@@ -687,9 +671,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         }
         no_jump_id = id
 
-        //TODO remove cc duration??
-        NO_JUMP_DURATION = duration / 1000 * 60
-        no_jump_timer = NO_JUMP_DURATION
+        no_jump_timer = NO_JUMP_MASH_REQUIREMENT
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
@@ -846,6 +828,16 @@ function void CrowdControl.SnapTails(u8 character)
             u16[address + 0x30] = 0x0000
         }
     }
+}
+
+function bool CrowdControl.updateNoJumpTimer() 
+{
+    if (control.pad1.pressed & CONTROL_ABC && no_jump_timer != 0)
+    {
+        no_jump_timer -= 1
+        return true
+    }
+    return no_jump_timer > 0
 }
 
 function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
