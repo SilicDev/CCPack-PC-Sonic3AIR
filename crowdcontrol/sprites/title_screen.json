@@ -1,0 +1,22 @@
+{
+    "sonic3air_logo": {
+        "File": "sonic3air_cc_logo.png",
+        "Rect": "0,0,150,53",
+        "Center": "90,10"
+    },
+    "cc_logo": {
+        "File": "cc_logo.png",
+        "Rect": "0,0,84,27",
+        "Center": "42,14"
+    },
+    "tornado_drag_logo": {
+        "File": "tornado_drag_logo.png",
+        "Rect": "0,0,120,28",
+        "Center": "60,14"
+    },
+    "tornado_drag_logo_flip": {
+        "File": "tornado_drag_logo_flip.png",
+        "Rect": "0,0,120,28",
+        "Center": "60,14"
+    }
+}
