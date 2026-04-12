@@ -866,6 +866,17 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
         // spr.setCoordinateSpace(1)
         return true
     }
+    if (objA0.update_address == 0x4b16)
+    {
+        // Title Screen 
+        SpriteHandle spr = Renderer.addSpriteHandle("cc_logo", 45,18,  renderQueue)
+    }
+    if (objA0.update_address == 0x4be4)
+    {
+        // Title Screen
+        string key = objA0.render_flags & render_flag.FLIP_X ? "tornado_drag_logo_flip" : "tornado_drag_logo"
+        SpriteHandle spr = Renderer.addSpriteHandle(key, px + (objA0.render_flags & render_flag.FLIP_X ? 80 : -80), py,  renderQueue)
+    }
     return base.Standalone.onWriteToSpriteTable(px, py, renderQueue)
 }
 
