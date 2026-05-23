@@ -200,3 +200,15 @@ function void fn016fa8()
     }
     base.fn016fa8()
 }
+
+//# address-hook(0x010294) end(0x010364)
+function void Character.GettingHurt()
+{
+    if (one_hit_kill_timer > 0) 
+    {
+        D0 = getSoundIdByObstacleAddress(u32[A2])
+        Character.Die_internal()
+        return
+    }
+    base.Character.GettingHurt()
+}

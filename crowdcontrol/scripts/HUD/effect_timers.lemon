@@ -19,6 +19,7 @@ function void RenderHUD()
     py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Random Gravity", GRAVITY_SWAP_DURATION, gravity_timer, GRAVITY_COLOR)
     py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "Invert Controls", INVERT_DIRECTIONS_DURATION, invert_directions_timer, INVERT_COLOR)
     py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "No Air Ability", NO_JUMP_ABILITY_DURATION, no_jump_ability_timer, NO_JUMP_COLOR)
+    py += CrowdControl_TIMER_HUD.tryDrawTimerRow(textX, px, py, rq++, "One Hit KO", ONE_HIT_KILL_DURATION, one_hit_kill_timer, ONE_HIT_COLOR)
 
     // If no rows were drawn, py will equal startPy
     if (py != startPy)

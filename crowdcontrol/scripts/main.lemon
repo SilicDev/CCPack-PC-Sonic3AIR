@@ -42,6 +42,9 @@ global u32 gravity_swap_timer = 0
 
 global u32 mephiles_id = 0
 
+global u32 one_hit_kill_timer = 0
+global u32 one_hit_kill_id = 0
+
 constant array<u16> gravity_values =
 {
     1, 2, 512, 1024,
@@ -100,6 +103,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(mephiles_id, CCStatusCode.PAUSED, "")
         }
+        if(one_hit_kill_timer > 0)
+        {
+            CrowdControl.sendResponse(one_hit_kill_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -127,6 +134,10 @@ function void PreFrameUpdate()
         if(MEPHILES.timer > 0)
         {
             CrowdControl.sendResponse(mephiles_id, CCStatusCode.RESUME, "")
+        }
+        if (one_hit_kill_timer > 0)
+        {
+            CrowdControl.sendResponse(one_hit_kill_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -195,6 +206,14 @@ function void PreFrameUpdate()
                 gravity_swap_timer = 0
                 gravity_value = 1
                 CrowdControl.sendResponse(gravity_id, CCStatusCode.FINISHED, "")
+            }
+        }
+        if (one_hit_kill_timer > 0)
+        {
+            one_hit_kill_timer--
+            if (one_hit_kill_timer == 0)
+            {
+                CrowdControl.sendResponse(one_hit_kill_id, CCStatusCode.FINISHED, "")
             }
         }
     }
@@ -766,6 +785,20 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             message =  "Object Limit Reached"
         }
         CrowdControl.sendResponse(id, response, message)
+    }
+    if (code == "OneHitKill")
+    {
+        if (one_hit_kill_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        one_hit_kill_id = id
+
+        ONE_HIT_KILL_DURATION = duration / 1000 * 60
+        one_hit_kill_timer = ONE_HIT_KILL_DURATION
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
     }
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration, viewer)
