@@ -1,0 +1,22 @@
+global bool CC_RENDERING_HUD
+
+//# address-hook(0x00db44) end(0x00dbb2)
+function void RenderHUD()
+{
+    push(lives_counter)
+    lives_counter = deaths
+    CC_RENDERING_HUD = true
+    base.RenderHUD()
+    CC_RENDERING_HUD = false
+    lives_counter = pop()
+}
+
+
+function u32 Game.getSetting(u32 settingId)
+{
+    if (settingId == SETTING_INFINITE_LIVES && CC_RENDERING_HUD)
+    {
+        return false
+    }
+    return base.Game.getSetting(settingId)
+}
