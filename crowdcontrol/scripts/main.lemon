@@ -44,6 +44,9 @@ global u32 mephiles_id = 0
 global u32 one_hit_kill_timer = 0
 global u32 one_hit_kill_id = 0
 
+global u32 sandstorm_timer = 0
+global u32 sandstorm_id = 0
+
 constant array<u16> gravity_values =
 {
     1, 2, 512, 1024,
@@ -106,6 +109,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(one_hit_kill_id, CCStatusCode.PAUSED, "")
         }
+        if(sandstorm_timer > 0)
+        {
+            CrowdControl.sendResponse(sandstorm_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -137,6 +144,10 @@ function void PreFrameUpdate()
         if (one_hit_kill_timer > 0)
         {
             CrowdControl.sendResponse(one_hit_kill_id, CCStatusCode.RESUME, "")
+        }
+        if (sandstorm_timer > 0)
+        {
+            CrowdControl.sendResponse(sandstorm_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -213,6 +224,14 @@ function void PreFrameUpdate()
             if (one_hit_kill_timer == 0)
             {
                 CrowdControl.sendResponse(one_hit_kill_id, CCStatusCode.FINISHED, "")
+            }
+        }
+        if (sandstorm_timer > 0)
+        {
+            sandstorm_timer--
+            if (sandstorm_timer == 0)
+            {
+                CrowdControl.sendResponse(sandstorm_id, CCStatusCode.FINISHED, "")
             }
         }
     }
@@ -796,6 +815,20 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 
         ONE_HIT_KILL_DURATION = duration / 1000 * 60
         one_hit_kill_timer = ONE_HIT_KILL_DURATION
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
+    if (code == "Sandstorm")
+    {
+        if (sandstorm_timer > 0)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        sandstorm_id = id
+
+        SANDSTORM_DURATION = duration / 1000 * 60
+        sandstorm_timer = SANDSTORM_DURATION
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
