@@ -1,0 +1,64 @@
+
+constant u32 CC_SANDSTORM_WIDTH = 128
+constant u32 CC_SANDSTORM_HEIGHT = 64
+
+
+global u16 CC_sandstorm_offset = 0
+
+//# address-hook(0x00db44) end(0x00dbb2)
+function void RenderHUD()
+{
+    if(sandstorm_timer == 0) 
+    {
+        base.RenderHUD()
+        if (Audio.isPlayingAudio("wind_loop"))
+            Audio.fadeOutChannel(150,.1)
+        return
+    }
+    if (!Audio.isPlayingAudio("wind_loop"))
+        Audio.playOverride("wind_loop", AudioContext.CONTEXT_SOUND, 150, 1)
+    else
+        Audio.fadeInChannel(150, 0.05)
+    u16 renderQueue = 0xe000-10
+
+    // first 30 frames fade in, last 30 fade out
+    float opacity = 1.0f
+
+    if (sandstorm_timer < 30)
+    {
+        opacity = sandstorm_timer / 30.0f
+    }
+    else if (sandstorm_timer > SANDSTORM_DURATION - 30)
+    {
+        opacity = (SANDSTORM_DURATION - sandstorm_timer) / 30.0f
+    }
+    u8 direction = (u8[0xffffb000 + 0x2a] & 1) ? 0 : 1
+    for (s16 y = -1; y < 6; y++) 
+    {
+        for (u16 x = 0; x < 4; x++) 
+        {
+            CC_drawSand(x * CC_SANDSTORM_WIDTH, (y * CC_SANDSTORM_HEIGHT) + CC_sandstorm_offset ,renderQueue, direction, opacity)
+        }
+    }
+    CC_sandstorm_offset = (CC_sandstorm_offset +1) % CC_SANDSTORM_HEIGHT
+    base.RenderHUD()
+
+    if (level.framecounter%32 == 0) 
+    {
+        //CC_SANDSTORM_DIRECTION = s8( System.rand() % 4)
+    }
+}
+
+function void CC_drawSand(s16 px, s16 py, u16 renderQueue, u8 direction, float opacity)
+{
+    u8 frame = (level.framecounter >> 2) & 3
+
+    if (direction == 1) 
+    {
+        frame = 3 - frame
+    }
+    SpriteHandle spr = Renderer.addSpriteHandle("sandstorm", px , py, renderQueue)
+    spr.setPalette("sandstormPalette",frame)
+    spr.setPriorityFlag(true)
+    spr.setOpacity(opacity)
+}
