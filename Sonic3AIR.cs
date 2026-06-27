@@ -84,6 +84,10 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 100, Duration = 30, Description = "Spawn an enemy to chase the player (Instant Kill, requires Mephiles Hunt mod by Sotaknuck)." },
                 new("Chao", "Chao")
                     { Price = 10, Description = "Spawn a random chao to assist the player." },
+                new("One Hit KO", "OneHitKill")
+                    { Price = 100, Duration = 30, Description = "Temporarily turn on one hit kill mode."},
+                new("Sandstorm", "Sandstorm")
+                    { Price = 50, Duration = 30, Description = "Make a sandstorm ravage the stage."},
             ];
             return effects;
         }
