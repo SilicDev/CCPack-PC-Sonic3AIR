@@ -58,22 +58,7 @@ function bool CC_SandstormEffect.active()
 
 function float CC_SandstormEffect.opacity()
 {
-    if (sandstorm_timer == 0)
-    {
-        return 0.0f
-    }
-
-    if (sandstorm_timer < 30)
-    {
-        return sandstorm_timer / 30.0f
-    }
-
-    if (sandstorm_timer > SANDSTORM_DURATION - 30)
-    {
-        return (SANDSTORM_DURATION - sandstorm_timer) / 30.0f
-    }
-
-    return 1.0f
+    return CC_WeatherEffect.opacity(sandstorm_timer, SANDSTORM_DURATION)
 }
 
 function u8 CC_SandstormEffect.direction()

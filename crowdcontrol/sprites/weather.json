@@ -1,5 +1,20 @@
 {
     "sandstorm": {
         "File": "sandstorm.bmp"
+    },
+    "blizzard": {
+        "File": "blizzard.bmp",
+        "Rect": "0,0,1024,768",
+        "Center": "256,256"
+    },
+    "blizzard_component": {
+        "File": "blizzard.png",
+        "Rect": "0,0,1024,768",
+        "Center": "256,256"
+    },
+    "snow_overlay": {
+        "File": "snow_overlay.png",
+        "Rect": "0,0,400,224",
+        "Center": "0,0"
     }
 }

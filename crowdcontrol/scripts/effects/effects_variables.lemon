@@ -8,6 +8,7 @@ global u32 BIG_ARMS_DURATION
 global u32 MEPH_HUNT_DURATION
 global u32 ONE_HIT_KILL_DURATION
 global u32 SANDSTORM_DURATION
+global u32 BLIZZARD_DURATION
 
 
 // HUD Timer Bar Colours
@@ -20,6 +21,7 @@ constant u32 BIG_ARMS_COLOR    = 0xff0038ff   // Eggman red
 constant u32 MEPH_COLOR        = 0x7a00ffff   // deep violet
 constant u32 ONE_HIT_COLOR     = 0xfea100ff   // jus d'orange
 constant u32 SANDSTORM_COLOR   = 0xdebe80ff   // sandy
+constant u32 BLIZZARD_COLOR    = 0x9fd8ffff   // icy blue
 
 
 // number of jump presses needed to clear the button mash guage

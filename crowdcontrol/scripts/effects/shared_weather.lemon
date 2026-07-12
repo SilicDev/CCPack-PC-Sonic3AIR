@@ -1,0 +1,24 @@
+function float CC_WeatherEffect.opacity(u32 timer, u32 duration)
+{
+    if (timer == 0)
+    {
+        return 0.0f
+    }
+
+    if (timer < 30)
+    {
+        return timer / 30.0f
+    }
+
+    if (timer > duration - 30)
+    {
+        return (duration - timer) / 30.0f
+    }
+
+    return 1.0f
+}
+
+function bool isWeatherEffectActive()
+{
+    return CC_SandstormEffect.active() || CC_BlizzardEffect.active()
+}
