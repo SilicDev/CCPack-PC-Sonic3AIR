@@ -47,6 +47,9 @@ global u32 one_hit_kill_id = 0
 global u32 sandstorm_timer = 0
 global u32 sandstorm_id = 0
 
+global u32 blizzard_timer = 0
+global u32 blizzard_id = 0
+
 constant array<u16> gravity_values =
 {
     1, 2, 512, 1024,
@@ -113,6 +116,10 @@ function void PreFrameUpdate()
         {
             CrowdControl.sendResponse(sandstorm_id, CCStatusCode.PAUSED, "")
         }
+        if(blizzard_timer > 0)
+        {
+            CrowdControl.sendResponse(blizzard_id, CCStatusCode.PAUSED, "")
+        }
     }
     if (CrowdControl.prev_paused && !CrowdControl.paused)
     {
@@ -148,6 +155,10 @@ function void PreFrameUpdate()
         if (sandstorm_timer > 0)
         {
             CrowdControl.sendResponse(sandstorm_id, CCStatusCode.RESUME, "")
+        }
+        if (blizzard_timer > 0)
+        {
+            CrowdControl.sendResponse(blizzard_id, CCStatusCode.RESUME, "")
         }
     }
     if (!CrowdControl.paused)
@@ -232,6 +243,14 @@ function void PreFrameUpdate()
             if (sandstorm_timer == 0)
             {
                 CrowdControl.sendResponse(sandstorm_id, CCStatusCode.FINISHED, "")
+            }
+        }
+        if (blizzard_timer > 0)
+        {
+            CC_BlizzardEffect.update()
+            if (blizzard_timer == 0)
+            {
+                CrowdControl.sendResponse(blizzard_id, CCStatusCode.FINISHED, "")
             }
         }
     }
@@ -820,7 +839,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     if (code == "Sandstorm")
     {
-        if (sandstorm_timer > 0)
+        if (isWeatherEffectActive())
         {
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
             return
@@ -829,6 +848,20 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 
         SANDSTORM_DURATION = duration / 1000 * 60
         sandstorm_timer = SANDSTORM_DURATION
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+    }
+    if (code == "Blizzard")
+    {
+        if (isWeatherEffectActive())
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            return
+        }
+        blizzard_id = id
+
+        BLIZZARD_DURATION = duration / 1000 * 60
+        CC_BlizzardEffect.start()
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
     }
