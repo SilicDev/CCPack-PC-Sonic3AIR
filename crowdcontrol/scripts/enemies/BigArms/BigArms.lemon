@@ -1,5 +1,5 @@
 global u32 BigArms.Timer = 0
-
+global u32 BigArms.SpriteVariations = 4
 // 0x074262
 function void BigArms.MainUpdate()
 {
@@ -142,7 +142,7 @@ function void BigArms.Init()
 
     // "spawnChildObjects(0x068184)" replaced by:
     //spawnChildObject(0x067cd2, 0x00, 0, -28)        // Robotnik head
-    u8 head_type = System.rand() % 4
+    u8 head_type = System.rand() % BigArms.SpriteVariations
     spawnChildObject(makeCallable(RobotnikHead.MainUpdate), head_type, 0, -28)        // Robotnik head
 }
 
@@ -925,7 +925,7 @@ function void BigArms.CheckDead()
     }
 
     objA0.flags2a |= 0x40
-    Boss.updateHitFlashing(6, 0x075092, 0x07509e)
+    //Boss.updateHitFlashing(6, 0x075092, 0x07509e)
 
     --objA0.state
     if (objA0.state == 0)
