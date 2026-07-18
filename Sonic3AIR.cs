@@ -88,6 +88,8 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 100, Duration = 30, Description = "Temporarily turn on one hit kill mode."},
                 new("Sandstorm", "Sandstorm")
                     { Price = 50, Duration = 30, Description = "Make a sandstorm ravage the stage."},
+                new("Blizzard", "Blizzard")
+                    { Price = 50, Duration = 30, Description = "Make a blizzard blow across the stage."},
             ];
             return effects;
         }
