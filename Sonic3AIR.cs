@@ -38,6 +38,11 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                 new("Blue Spheres Jail", "BlueSpheres")
                     {
                         Price = 250, Description = "Send the player to complete a level of Blue spheres.",
+                        SessionCooldown = 5, Inactive = true,
+                    },
+                new("Bonus Stage", "BonusStage")
+                    {
+                        Price = 150, Description = "Send the player to a bonus stage.",
                         SessionCooldown = 5
                     },
                 new("Shove", "Shove")

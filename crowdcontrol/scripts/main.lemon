@@ -273,7 +273,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
 {
     // Debug output
     //debugLog(code)
-    if ((u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT) || global.game.paused)
+    if ((u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT) || global.game.paused || Game.isInSkippableCutscene())
     {
         CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
         return
@@ -504,7 +504,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     if (code == "BlueSpheres")
     {
-        if (global.game_mode != GAME_MODE_MAIN_GAME || global.zone >= ZONE_DDZ || level.boss_encounter || Game.isInSkippableCutscene())
+        if (global.game_mode != GAME_MODE_MAIN_GAME || global.zone >= ZONE_DDZ || level.boss_encounter)
         {
             CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
             return
@@ -521,6 +521,49 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         global.stage_type = 0
         bluespheres.minigame_mode = 1
         global.game_mode = GAME_MODE_SPECIAL_STAGE
+        CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
+        return
+
+    }
+    if (code == "BonusStage")
+    {
+        if (global.game_mode != GAME_MODE_MAIN_GAME || global.zone >= ZONE_DDZ || level.boss_encounter)
+        {
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            return
+        }
+
+        fn02d1cc()
+        global.stage_type = 2
+        u16 stage = Checkpoint.selectBonusStage()
+        if (stage == 0)
+        {
+            // Slot machine
+            stage = ZONEACT_SLOT_BONUS
+        }
+        else if (stage == 1)
+        {
+            // Glowing spheres
+            stage = ZONEACT_SPHERES_BONUS
+        }
+        else
+        {
+            // Gumball machine
+            stage = ZONEACT_GUMBALL_BONUS
+        }
+        global.zone_act = stage
+        global.zone_act.apparent = stage
+        global.in_extra_stage = 1
+        checkpoint.number = 0
+        checkpoint.rings = ring_counter
+        checkpoint.lives_granted = extra_lives_granted
+        level.restart.u8 = 1
+        
+        // Backup of shields active before entering the Bonus Stage
+        u8 shield = u8[0xffffb000 + 0x2b] & char.bonus.ALL_SHIELDS
+        global.shields_backup_1 = shield
+        global.shields_backup_2 = shield
+        fn01bb7e()
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
 
