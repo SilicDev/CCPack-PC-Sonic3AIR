@@ -3,6 +3,7 @@
 
 #define HAS_CROWD_CONTROL_MOD
 #define CROWD_CONTROL_VERSION = 0x010000
+#define CC_DEBUG = 0
 
 include EnemySpawn
 include Bumpers
@@ -1023,7 +1024,7 @@ function bool Standalone.onWriteToSpriteTable(s16 px, s16 py, u16 renderQueue)
 
 
 // Dev feature just for testing - must get disabled / removed before release!
-#if 1
+#if CC_DEBUG
 
 global bool key2_state = false
 global bool key3_state = false

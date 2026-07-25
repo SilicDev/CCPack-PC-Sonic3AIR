@@ -2,13 +2,13 @@
 #define CC_FORCE_INF_LIVES
 #define CC_FORCE_INF_TIME
 
+#if CC_DEBUG
 #if CC_L_TO_SPAWN
 // temporary hook-up mechanism
 //# address-hook(0x0013e4) end(0x0014e4)
 function void UpdateGamePause() 
 {
 	base.UpdateGamePause()
-	
 	// should probably put in something to ensure we're in standard play?
     #if GAMEAPP >= 0x25021500
 	if (Input.buttonPressed(0, BUTTON_L))
@@ -34,8 +34,10 @@ function void UpdateGamePause()
 			}
 		}
 		
-	}	
+	}
+
 }
+#endif
 #endif
 
 
