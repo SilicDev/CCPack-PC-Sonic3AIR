@@ -10,6 +10,7 @@ include Bumpers
 include fixes
 include character_modification
 include define_constants
+include balancing/?
 include effects/?
 include HUD/?
 include utils/?

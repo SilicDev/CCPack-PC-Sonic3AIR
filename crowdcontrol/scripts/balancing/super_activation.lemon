@@ -1,0 +1,56 @@
+constant u16 CC_SUPER_TRANSFORM_MIN_RINGS = 20
+constant u16 CC_BASE_SUPER_TRANSFORM_MIN_RINGS = 50
+constant u16 CC_BIG_RING_REWARD_RINGS = 20
+
+function bool Character.performSuperTransformation()
+{
+    if (ring_counter >= CC_BASE_SUPER_TRANSFORM_MIN_RINGS)
+    {
+        return base.Character.performSuperTransformation()
+    }
+
+    if (ring_counter < CC_SUPER_TRANSFORM_MIN_RINGS)
+    {
+        return false
+    }
+
+    u16 originalRingCount = ring_counter
+    ring_counter = CC_BASE_SUPER_TRANSFORM_MIN_RINGS
+
+    bool transformed = base.Character.performSuperTransformation()
+
+    ring_counter = originalRingCount
+    return transformed
+}
+
+// just give rings instead of activating blue spheres
+//# address-hook(0x0616e6) end(0x06178a)
+function void fn0616e6()
+{
+    Object.AnimationProgressByLocalA1()
+    if (debug_mode.state != 0 || objA0.animation.sprite < 8)
+    {
+        return
+    }
+
+    A1 = 0x06178c
+    fn0858f8()
+    if (D0.u16 == 0)
+    {
+        return
+    }
+
+    A1 = 0xffffb000
+    if (u8[A1 + 0x05] >= base_state.DIED)
+    {
+        return
+    }
+
+    playSound(0xb3)
+    Standalone.onGiantRingCollected()
+
+    level.giantrings_clear |= (1 << objA0.subtype2c)
+    objA0.flags38 |= 0x20
+
+    addRings(CC_BIG_RING_REWARD_RINGS)
+}

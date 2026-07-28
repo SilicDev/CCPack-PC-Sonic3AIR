@@ -1,0 +1,68 @@
+constant u16 CC_EMERALD_INDICATOR_WIDTH = 16
+constant u16 CC_EMERALD_INDICATOR_HEIGHT = 14
+constant u16 CC_EMERALD_INDICATOR_GAP = 5
+
+//# address-hook(0x00db44) end(0x00dbb2)
+function void RenderHUD()
+{
+    base.RenderHUD()
+    CrowdControl_EMERALD_INDICATOR.draw(0xe010)
+}
+
+function void CrowdControl_EMERALD_INDICATOR.draw(u16 renderQueue)
+{
+    if (!CrowdControl_EMERALD_INDICATOR.hasAllEmeralds())
+    {
+        return
+    }
+
+    if (Game.isTimeAttack())
+    {
+        return
+    }
+
+    s16 baseX = global.level_started
+    if (baseX < 0)
+    {
+        baseX += 8
+    }
+    baseX += 0x0f
+
+    s16 baseY = 0x08
+    bool useMobilePosition = HUD.useMobileLivesDisplay()
+    s16 livesX = useMobilePosition ? s16(getScreenWidth() - baseX - 0x30) : baseX
+    s16 livesY = useMobilePosition ? baseY : 200
+
+    s16 px = useMobilePosition ? (livesX - CC_EMERALD_INDICATOR_WIDTH - CC_EMERALD_INDICATOR_GAP) : livesX
+    s16 py = useMobilePosition ? livesY : (livesY - CC_EMERALD_INDICATOR_HEIGHT - CC_EMERALD_INDICATOR_GAP)
+
+    SpriteHandle indicator = Renderer.addSpriteHandle("cc_all_emeralds_indicator", px, py, renderQueue)
+    indicator.setPriorityFlag(true)
+    indicator.setOpacity(CrowdControl_EMERALD_INDICATOR.opacity())
+}
+
+function bool CrowdControl_EMERALD_INDICATOR.hasAllEmeralds()
+{
+    return global.chaos_emeralds >= 7 || global.super_emeralds >= 7
+}
+
+function bool CrowdControl_EMERALD_INDICATOR.canTransform()
+{
+    return ring_counter >= CC_SUPER_TRANSFORM_MIN_RINGS
+}
+
+function float CrowdControl_EMERALD_INDICATOR.opacity()
+{
+    if (!CrowdControl_EMERALD_INDICATOR.canTransform())
+    {
+        return 1.0f
+    }
+
+    u8 frame = level.framecounter.low & 0x1f
+    if (frame > 16)
+    {
+        frame = 32 - frame
+    }
+
+    return 0.35f + (float(frame) / 16.0f) * 0.65f
+}
