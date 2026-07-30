@@ -841,7 +841,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (!CrowdControl_MEPHILES.isTargetActive()) 
         {
-            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Mephiles Hunt Mod Not Active")
+            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Mephiles Hunt Mod Not Active")
             return
         }
         if(MEPHILES.timer > 0)
