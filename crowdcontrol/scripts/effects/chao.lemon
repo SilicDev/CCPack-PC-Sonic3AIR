@@ -115,7 +115,7 @@ function u32 CrowdControl_Chao.trySpawn(string viewerName)
     if (!allocDynamicObjectStd())
     {
         A1 = pop()
-        return CCStatusCode.FAILURE
+        return CCStatusCode.RETRY
     }
 
     objA1.update_address = 0x060d32
