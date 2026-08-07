@@ -277,7 +277,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     //debugLog(code)
     if ((u8[0xffffb000 + 0x05] != base_state.NORMAL && u8[0xffffb000 + 0x05] != base_state.HURT) || global.game.paused || Game.isInSkippableCutscene())
     {
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
         return
     }
 
@@ -292,7 +292,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (player.total_rings < quantity)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Not enough rings to take.")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Not enough rings to take.")
             return
         }
         D0 = -quantity
@@ -401,7 +401,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             return
         }
 
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "Eggbox")
@@ -435,14 +435,14 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "Slap" && u8[0xffffb000 + 0x2e] == 0)
     {
         if (u8[0xffffb000 + 0x2e] != 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
         CrowdControl.SlapPlayer()
@@ -456,7 +456,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "Kill")
@@ -508,7 +508,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (global.game_mode != GAME_MODE_MAIN_GAME || global.zone >= ZONE_DDZ || level.boss_encounter)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
 
@@ -531,7 +531,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (global.game_mode != GAME_MODE_MAIN_GAME || global.zone >= ZONE_DDZ || level.boss_encounter)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
 
@@ -577,7 +577,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "Meansteron")
@@ -587,14 +587,14 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "GiveEmerald")
     {
         if (global.super_emeralds >= 7 || global.zone == ZONE_DDZ)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
         if (global.chaos_emeralds >= 7)
@@ -614,7 +614,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (global.chaos_emeralds == 0 || global.zone == ZONE_DDZ)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
         if (global.super_emeralds > 0)
@@ -641,7 +641,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (u8[0xffffb000 + 0x2b] && char.bonus.SPEED_UP)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
         u32 ABackUp = A1 //A1 needed for ItemEffect.Apply*
@@ -699,7 +699,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "HorizontalSpring")
@@ -730,14 +730,14 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "InvertControls")
     {
         if (invert_directions_timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         invert_directions_id = id
@@ -751,7 +751,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (BigArms.Timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Can't spawn second Big Arms")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Can't spawn second Big Arms")
             return
         }
         if (allocDynamicObjectStd())
@@ -760,14 +760,14 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
             return
         }
-        CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Object memory is full")
+        CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Object memory is full")
         return
     }
     if (code == "NoJump")
     {
         if (no_jump_timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         no_jump_id = id
@@ -780,7 +780,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (no_jump_ability_timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         no_jump_ability_id = id
@@ -794,7 +794,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (earthquake_timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         earthquake_id = id
@@ -809,7 +809,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (gravity_timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         gravity_id = id
@@ -823,12 +823,12 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (getSecondCharacter() == 0xFF)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "No Second Character")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "No Second Character")
             return
         }
         if (partnerBumper_timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         partnerBumper_id = id        
@@ -846,7 +846,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         }
         if(MEPHILES.timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         mephiles_id = id
@@ -862,17 +862,13 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         {
             message =  "Chao Limit Reached"
         }
-        if (response == CCStatusCode.FAILURE) 
-        {
-            message =  "Object Limit Reached"
-        }
         CrowdControl.sendResponse(id, response, message)
     }
     if (code == "OneHitKill")
     {
         if (one_hit_kill_timer > 0)
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         one_hit_kill_id = id
@@ -886,7 +882,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (isWeatherEffectActive())
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         sandstorm_id = id
@@ -900,7 +896,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     {
         if (isWeatherEffectActive())
         {
-            CrowdControl.sendResponse(id, CCStatusCode.FAILURE, "Already running")
+            CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Already running")
             return
         }
         blizzard_id = id
