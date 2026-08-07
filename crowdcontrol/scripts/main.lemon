@@ -290,13 +290,13 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     if (code == "TakeRing")
     {
-        if (player.total_rings < quantity)
+        if (ring_counter < quantity)
         {
             CrowdControl.sendResponse(id, CCStatusCode.RETRY, "Not enough rings to take.")
             return
         }
-        D0 = -quantity
-        AddRings()
+        ring_counter -= quantity
+        hud.dirty.rings |= 0x01
 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
