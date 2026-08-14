@@ -35,11 +35,6 @@ class Sonic3AIR : SimpleTCPPack<SimpleTCPServerConnector>
                     { Price = 100, Description = "Gives the chaos/super emeralds to the player." },
                 new("Take Emeralds", "TakeEmerald")
                     { Price = 200, Description = "Takes the chaos/super emeralds from the player." },
-                new("Blue Spheres Jail", "BlueSpheres")
-                    {
-                        Price = 250, Description = "Send the player to complete a level of Blue spheres.",
-                        SessionCooldown = 5, Inactive = true,
-                    },
                 new("Bonus Stage", "BonusStage")
                     {
                         Price = 150, Description = "Send the player to a bonus stage.",
