@@ -597,15 +597,9 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
-        if (global.chaos_emeralds >= 7)
-        {
-            global.traded_emeralds = 0xFF
-            global.super_emeralds = 7
-        }
-        else
-        {
-            global.chaos_emeralds = 7
-        }
+        global.chaos_emeralds = 7
+        global.traded_emeralds = 0xFF
+        global.super_emeralds = 7
 
         CrowdControl.sendResponse(id, CCStatusCode.SUCCESS, "")
         return
@@ -617,19 +611,11 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
             CrowdControl.sendResponse(id, CCStatusCode.RETRY, "")
             return
         }
-        if (global.super_emeralds > 0)
-        {
-            global.super_emeralds = 0
-            global.traded_emeralds = 0
-            Character.cancelSuperTransformation()
-            CrowdControl.SlapPlayer()
-        }
-        else
-        {
-            global.chaos_emeralds = 0
-            Character.cancelSuperTransformation()
-            CrowdControl.SlapPlayer()
-        }
+        global.chaos_emeralds = 0
+        global.super_emeralds = 0
+        global.traded_emeralds = 0
+        Character.cancelSuperTransformation()
+        CrowdControl.SlapPlayer()
         if (global.zone != ZONE_DDZ)    // No music change in DDZ
         {
             chooseFittingMusic()
