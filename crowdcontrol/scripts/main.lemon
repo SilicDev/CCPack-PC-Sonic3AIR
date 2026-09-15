@@ -560,7 +560,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         checkpoint.rings = ring_counter
         checkpoint.lives_granted = extra_lives_granted
         level.restart.u8 = 1
-        
+
         // Backup of shields active before entering the Bonus Stage
         u8 shield = u8[0xffffb000 + 0x2b] & char.bonus.ALL_SHIELDS
         global.shields_backup_1 = shield
@@ -894,65 +894,6 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
     }
     // For unknown effects
     base.CrowdControl.triggerEffect(id, code, quantity, duration, viewer)
-}
-
-// return is unused for now, just adding in case we have additional fail conditions
-function bool CrowdControl.SwapToSonic()
-{
-    char.update_address = addressof(Character.BaseUpdate.Sonic)
-    u16 sprio = u16[0xFFFFB00A]
-    char.base_state = 0x00
-    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
-    global.characters = CHARS_SONIC_ALONE
-    CrowdControl.SnapTails(2)
-    return true
-}
-
-function bool CrowdControl.SwapToTails()
-{
-    char.update_address = addressof(Character.BaseUpdate.Tails)
-    u16 sprio = u16[0xFFFFB00A]
-    char.base_state = 0x00
-    char.sprite_attributes = 0x06A0 | (0x8000 & sprio)
-    global.characters = CHARS_TAILS_ALONE
-    CrowdControl.SnapTails(1)
-    return true
-}
-
-function bool CrowdControl.SwapToKnuckles()
-{
-    char.update_address = addressof(Character.BaseUpdate.Knuckles)
-    u16 sprio = u16[0xFFFFB00A]
-    char.base_state = 0x00
-    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
-    global.characters = CHARS_KNUCKLES_ALONE
-    CrowdControl.SnapTails(2)
-    return true
-}
-
-function void CrowdControl.SnapTails(u8 character)
-{
-    u32 address = seekObjectTableFor(addressof(TailsTails.Update), 95, 108)
-    if (address == 0)
-    {
-        address = seekObjectTableFor(addressof(TailsTails.Init), 95, 108)
-    }
-    if (address != 0)
-    {
-        //debugLog("Found Tails!")
-        if (character == 1)
-        {
-            u16[address + 0x30] = 0xB000
-        }
-        if (character == 2)
-        {
-            u16[address + 0x30] = 0xB04A
-        }
-        if (character == 3)
-        {
-            u16[address + 0x30] = 0x0000
-        }
-    }
 }
 
 function bool CrowdControl.updateNoJumpTimer() 
