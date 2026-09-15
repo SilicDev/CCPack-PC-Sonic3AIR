@@ -68,6 +68,9 @@ function u8 CC_SandstormEffect.direction()
 
 function void CC_SandstormEffect.updateAudio()
 {
+    if (!CROWD_CONTROL_SETTINGS.sandstormAudio)
+        return
+
     if (!CC_SandstormEffect.active())
     {
         if (Audio.isPlayingAudio("wind_loop"))

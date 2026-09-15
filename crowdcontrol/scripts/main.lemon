@@ -10,6 +10,7 @@ include Bumpers
 include fixes
 include character_modification
 include define_constants
+include settings
 include balancing/?
 include effects/?
 include HUD/?
@@ -560,7 +561,7 @@ function void CrowdControl.triggerEffect(u32 id, string code, s32 quantity, s32 
         checkpoint.rings = ring_counter
         checkpoint.lives_granted = extra_lives_granted
         level.restart.u8 = 1
-        
+
         // Backup of shields active before entering the Bonus Stage
         u8 shield = u8[0xffffb000 + 0x2b] & char.bonus.ALL_SHIELDS
         global.shields_backup_1 = shield
