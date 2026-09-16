@@ -1,0 +1,81 @@
+// return is unused for now, just adding in case we have additional fail conditions
+function bool CrowdControl.SwapToSonic()
+{
+    char.update_address = addressof(Character.BaseUpdate.Sonic)
+    u16 sprio = u16[0xFFFFB00A]
+    char.base_state = 0x00
+    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
+    global.characters = CHARS_SONIC_AND_TAILS
+    CrowdControl.forceMilesPartner() 
+    return true
+}
+
+function bool CrowdControl.SwapToTails()
+{
+    char.update_address = addressof(Character.BaseUpdate.Tails)
+    u16 sprio = u16[0xFFFFB00A]
+    char.base_state = 0x00
+    char.sprite_attributes = 0x06A0 | (0x8000 & sprio)
+    // delete player 2
+    unloadObjectAt(0xffffb04a)
+    global.characters = CHARS_TAILS_ALONE
+    return true
+}
+
+function bool CrowdControl.SwapToKnuckles()
+{
+    char.update_address = addressof(Character.BaseUpdate.Knuckles)
+    u16 sprio = u16[0xFFFFB00A]
+    char.base_state = 0x00
+    char.sprite_attributes = 0x0680 | (0x8000 & sprio)
+    global.characters = CHARS_KNUCKLES_ALONE
+    useKnucklesAndTails = true
+    CrowdControl.forceMilesPartner() 
+    return true
+}
+
+function void CrowdControl.forceMilesPartner() 
+{
+    if (u32[0xffffb04a] != 0 && u8[0xffffb04a + 0x38] == CHARACTER_TAILS)
+        return
+
+    u32[0xffffb04a] = addressof(Character.BaseUpdate.Tails)
+    u8[0xffffb04a + 0x05] = base_state.INITIAL
+    u16[0xffffb04a + 0x10] = u16[0xffffb000 + 0x10] - 0x20
+    u16[0xffffb04a + 0x14] = u16[0xffffb000 + 0x14] + 4
+    tails.ai_routine = 0
+    tails.control_counter = 0
+    tails.respawn_counter = 0
+
+}
+
+// Ensure partner is on even if player selects Sonic or Knuckles Solo
+//# address-hook(0x010afa) end(0x010bb8)
+function void Character.Initialization.Sonic()
+{
+    bool isP1 = A0 == 0xffffb000
+
+    if (isP1)
+        global.characters = CHARS_SONIC_AND_TAILS
+
+    base.Character.Initialization.Sonic()
+
+    if (isP1)
+        CrowdControl.forceMilesPartner() 
+}
+
+//# address-hook(0x0164aa) end(0x01656a)
+function void Character.Initialization.Knuckles()
+{
+    bool isP1 = A0 == 0xffffb000
+
+    if (isP1)
+    {
+        useKnucklesAndTails = true
+    }
+
+    base.Character.Initialization.Knuckles()
+
+    if (isP1)
+        CrowdControl.forceMilesPartner() 
+}
