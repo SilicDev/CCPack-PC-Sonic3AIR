@@ -17,5 +17,19 @@
 			"IsRequired": "0",
 			"Priority": "Lower"
 		}
+	},
+	"Settings": {
+		"List": [
+			{
+				"InternalName": "CROWD_CONTROL_SETTINGS.sandstormAudio",
+				"DisplayName": "Sandstorm Audio",
+				"Variable": "CROWD_CONTROL_SETTINGS.sandstormAudio",
+				"DefaultValue": "1",
+				"Options": {
+					"1": "On",
+					"0": "Off"
+				}
+			}
+		]
 	}
 }
